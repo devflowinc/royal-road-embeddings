@@ -14,3 +14,22 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 .env
+
+
+# Byte-compiled / optimized files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# Compiled Python files
+*.pyc
+
+# Compiled files
+dist/
+build/
+*.egg-info/
