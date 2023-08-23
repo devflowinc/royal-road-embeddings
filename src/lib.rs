@@ -21,21 +21,6 @@ pub async fn main() -> std::io::Result<()> {
         panic!("{}", e);
     }
 
-    // let database_url = std::env::var("DATABASE_URL").unwrap();
-    // let pool = PgPoolOptions::new()
-    //     .max_connections(5)
-    //     .connect(&database_url)
-    //     .await
-    //     .expect("Failed to connect to Postgres.");
-    // let migration_result = sqlx::migrate!()
-    //     .run(&pool)
-    //     .await;
-    //
-    // match migration_result {
-    //     Ok(_) => log::info!("Successfully migrated database."),
-    //     Err(e) => log::error!("Failed to migrate database: {}", e),
-    // }
-
     log::info!("starting HTTP server at http://localhost:8090");
 
     HttpServer::new(move || {
