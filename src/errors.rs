@@ -1,4 +1,4 @@
-use actix_web::{http, HttpResponse, ResponseError};
+use actix_web::{HttpResponse, ResponseError};
 use derive_more::Display;
 
 #[derive(serde::Serialize)]
@@ -8,13 +8,15 @@ pub struct ErrorResponse {
 
 #[derive(Debug, Display)]
 pub enum ServiceError {
-    IAMATeaPot,
+    InvalidAPIKey,
 }
 
 impl ResponseError for ServiceError {
     fn error_response(&self) -> HttpResponse {
         match self {
-            ServiceError::IAMATeaPot => HttpResponse::new(http::StatusCode::IM_A_TEAPOT),
+            ServiceError::InvalidAPIKey => HttpResponse::Unauthorized().json(ErrorResponse {
+                message: "Invalid API key provided.".to_string(),
+            }),
         }
     }
 }
