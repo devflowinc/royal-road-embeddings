@@ -1,0 +1,27 @@
+[package]
+name = "royal-road-embeddings"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4.3.1"
+chrono = { version = "=0.4.22", features = ["serde"] }
+derive_more = "0.99.17"
+dotenv = "0.15.0"
+env_logger = "0.10.0"
+log = "0.4.19"
+serde = "1.0.177"
+serde_json = "1.0.104"
+sqlx = { version = "0.7.0", features = [
+    "runtime-tokio",
+    "tls-native-tls",
+    "postgres",
+    "macros",
+    "uuid",
+    "chrono",
+    "migrate",
+] }
+time = "0.3.23"
+uuid = { version = "1.4.1", features = ["v4", "serde"] }
