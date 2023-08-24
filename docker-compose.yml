@@ -1,16 +1,14 @@
 version: "3"
 
 services:
-  db:
-    image: postgres
-    restart: always
+  qdrant-database:
+    image: qdrant/qdrant:v1.3.2
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: engagement
-    volumes:
-      - flowdata:/var/lib/postgresql/data
+      - QDRANT__SERVICE__API_KEY=qdrant_pass
     ports:
-      - "5432:5432"
+      - 6333:6333
+      - 6334:6334
+    volumes:
+      - qdrant_data:/qdrant/storage
 volumes:
-  flowdata:
+  qdrant_data:
