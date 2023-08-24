@@ -1,10 +1,7 @@
+use ndarray::{Array, Array1};
 use serde::{Deserialize, Serialize};
 
 use crate::errors::ServiceError;
-
-pub async fn create_embedding(message: &str) -> Result<Vec<f32>, ServiceError> {
-    create_server_embedding(message).await
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CustomServerData {
@@ -16,7 +13,7 @@ pub struct CustomServerResponse {
     pub embeddings: Vec<f32>,
 }
 
-pub async fn create_server_embedding(message: &str) -> Result<Vec<f32>, ServiceError> {
+pub async fn create_embedding(messages: String) -> Result<Vec<f32>, ServiceError> {
     let embedding_server_call =
         std::env::var("EMBEDDING_SERVER_CALL").expect("EMBEDDING_SERVER_CALL must be set");
 
@@ -24,7 +21,7 @@ pub async fn create_server_embedding(message: &str) -> Result<Vec<f32>, ServiceE
     let resp = client
         .post(embedding_server_call)
         .json(&CustomServerData {
-            input: message.to_string(),
+            input: messages,
         })
         .send()
         .await
@@ -34,4 +31,17 @@ pub async fn create_server_embedding(message: &str) -> Result<Vec<f32>, ServiceE
         .map_err(ServiceError::EmbeddingServerParseError)?;
 
     Ok(resp.embeddings)
+}
+pub async fn get_average_embedding(document_chunks: Vec<String>) -> Result<Vec<f32>, ServiceError> {
+    let mut embeddings: Vec<Vec<f32>> = vec![];
+    for chunk in document_chunks {
+        embeddings.push(create_embedding(chunk).await?);
+    }
+    let average_embedding: Array1<f32> = embeddings
+        .iter()
+        .map(|a| Array::from(a.clone()))
+        .reduce(|a, b| a + b)
+        .ok_or(ServiceError::EmbeddingAveragingError)?;
+
+    Ok(average_embedding.to_vec())
 }

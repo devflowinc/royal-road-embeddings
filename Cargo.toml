@@ -7,11 +7,14 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.3.1"
+anyhow = "1.0.75"
 chrono = { version = "=0.4.22", features = ["serde"] }
 derive_more = "0.99.17"
 dotenv = "0.15.0"
 env_logger = "0.10.0"
 log = "0.4.19"
+ndarray = "0.15.6"
+qdrant-client = "1.4.0"
 reqwest = { version = "0.11.19", features = ["json"] }
 serde = { version = "1.0.177", features = ["derive"] }
 serde_json = "1.0.104"

@@ -25,7 +25,7 @@ impl FromRequest for AuthRequired {
 }
 
 
-pub async fn check_key(_: AuthRequired) -> Result<HttpResponse, actix_web::Error> {
+pub async fn check_key(_: AuthRequired) -> Result<HttpResponse, ServiceError> {
 
     Ok(HttpResponse::NoContent().finish())
 }
