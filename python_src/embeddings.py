@@ -1,4 +1,5 @@
 # Load model directly
+from typing import List
 from transformers import AutoTokenizer, AutoModel
 import uvicorn
 import torch
@@ -27,29 +28,33 @@ def health():
 
 
 class EncodeRequest(BaseModel):
-    input: str
+    input: List[str]
 
 @app.post("/encode")
 async def encode(encodingRequest: EncodeRequest):
-    encoded_input = tokenizer(
-        encodingRequest.input,
-        padding=True,
-        truncation=True,
-        max_length=512,
-        add_special_tokens=True,
-        return_tensors="pt",
-    ).to(device)
-    # for s2p(short query to long passage) retrieval task, add an instruction to query (not add instruction for passages)
-    # encoded_input = tokenizer([instruction + q for q in queries], padding=True, truncation=True, return_tensors='pt')
+    embeds = []
+    for input in encodingRequest.input:
+        encoded_input = tokenizer(
+            encodingRequest.input,
+            padding=True,
+            truncation=True,
+            max_length=512,
+            add_special_tokens=True,
+            return_tensors="pt",
+        ).to(device)
+        # for s2p(short query to long passage) retrieval task, add an instruction to query (not add instruction for passages)
+        # encoded_input = tokenizer([instruction + q for q in queries], padding=True, truncation=True, return_tensors='pt')
 
-    # Compute token embeddings
-    with torch.no_grad():
-        model_output = model(**encoded_input)
-        # Perform pooling. In this case, cls pooling.
-        sentence_embeddings = model_output[0][:, 0]
-    # normalize embeddings
-    sentence_embeddings = torch.nn.functional.normalize(sentence_embeddings, p=2, dim=1)
-    return JSONResponse(content={"embeddings": np.array(sentence_embeddings.cpu())[0].tolist()})
+        # Compute token embeddings
+        with torch.no_grad():
+            model_output = model(**encoded_input)
+            # Perform pooling. In this case, cls pooling.
+            sentence_embeddings = model_output[0][:, 0]
+        # normalize embeddings
+        sentence_embeddings = torch.nn.functional.normalize(sentence_embeddings, p=2, dim=1)
+        embeds.append(sentence_embeddings.cpu().numpy())
+    
+    return JSONResponse(content={"embeddings": np.mean(embeds, axis=0)[0].tolist()})
 
 
 if __name__ == "__main__":
