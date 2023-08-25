@@ -22,7 +22,7 @@ pub async fn index_document(
     let doc_content = parse_operator::parse_html(document.doc_html.clone());
     let doc_chunks = parse_operator::chunk_document(doc_content.clone());
 
-    let embedding = embedding_operator::get_average_embedding(doc_chunks).await?;
+    let embedding = embedding_operator::create_embedding(doc_chunks).await?;
 
     qdrant_operator::upsert_document(Document::from_details(
         document.story_id,
