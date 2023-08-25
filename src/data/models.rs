@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use serde::{Serialize, Deserialize};
 use qdrant_client::prelude::Value;
-
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Document {

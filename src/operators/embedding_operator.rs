@@ -20,9 +20,7 @@ pub async fn create_embedding(messages: String) -> Result<Vec<f32>, ServiceError
     let client = reqwest::Client::new();
     let resp = client
         .post(embedding_server_call)
-        .json(&CustomServerData {
-            input: messages,
-        })
+        .json(&CustomServerData { input: messages })
         .send()
         .await
         .map_err(ServiceError::EmbeddingServerCallError)?

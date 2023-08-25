@@ -1,4 +1,3 @@
-
 pub fn parse_html(html: String) -> String {
     // TODO: remove html tags from string
     html

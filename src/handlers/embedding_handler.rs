@@ -1,8 +1,9 @@
 use actix_web::{web, HttpResponse};
 
 use crate::{
+    data::models::Document,
     errors::ServiceError,
-    operators::{embedding_operator, parse_operator, qdrant_operator}, data::models::Document,
+    operators::{embedding_operator, parse_operator, qdrant_operator},
 };
 
 use super::auth_handler::AuthRequired;

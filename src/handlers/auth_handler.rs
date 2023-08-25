@@ -1,12 +1,13 @@
-use std::future::{Ready, ready};
+use std::future::{ready, Ready};
 
-use actix_web::{{FromRequest, dev::Payload}, HttpRequest, HttpResponse};
+use actix_web::{
+    HttpRequest, HttpResponse,
+    {dev::Payload, FromRequest},
+};
 
 use crate::errors::ServiceError;
 
-
-pub struct AuthRequired {
-}
+pub struct AuthRequired {}
 
 impl FromRequest for AuthRequired {
     type Error = actix_web::Error;
@@ -16,7 +17,7 @@ impl FromRequest for AuthRequired {
         let key = std::env::var("API_KEY").expect("API_KEY must be set");
         if let Some(api_key) = req.headers().get("X-API-KEY") {
             if api_key.to_str().unwrap() == key {
-                return ready(Ok(AuthRequired { }))
+                return ready(Ok(AuthRequired {}));
             }
         }
 
@@ -24,8 +25,6 @@ impl FromRequest for AuthRequired {
     }
 }
 
-
 pub async fn check_key(_: AuthRequired) -> Result<HttpResponse, ServiceError> {
-
     Ok(HttpResponse::NoContent().finish())
 }

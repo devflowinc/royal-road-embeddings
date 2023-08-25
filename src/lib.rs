@@ -7,7 +7,8 @@ mod operators;
 
 pub fn check_environment_variables() -> Result<(), String> {
     std::env::var("API_KEY").map_err(|_| "API_KEY environment variable not set.")?;
-    std::env::var("EMBEDDING_SERVER_CALL").map_err(|_| "EMBEDDING_SERVER_CALL environment variable not set.")?;
+    std::env::var("EMBEDDING_SERVER_CALL")
+        .map_err(|_| "EMBEDDING_SERVER_CALL environment variable not set.")?;
     Ok(())
 }
 
