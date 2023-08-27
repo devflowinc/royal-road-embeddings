@@ -14,7 +14,7 @@ pub fn check_environment_variables() -> Result<(), String> {
 
 #[actix_web::main]
 pub async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let env_result = check_environment_variables();
