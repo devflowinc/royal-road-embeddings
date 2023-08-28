@@ -16,6 +16,7 @@ pub enum ServiceError {
     EmbeddingAveragingError,
     QdrantConnectionError(anyhow::Error),
     UpsertDocEmbeddingQdrantError(anyhow::Error),
+    DeleteDocEmbeddingQdrantError(anyhow::Error),
     UpsertDocEmbeddingPgError(sqlx::Error),
 }
 
@@ -55,10 +56,15 @@ impl ResponseError for ServiceError {
                     message: "Error upserting DocEmbedding to Qdrant.".to_string(),
                     error_code: "0006".to_string(),
                 }),
+            ServiceError::DeleteDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error deleting DocEmbedding from Qdrant.".to_string(),
+                    error_code: "0007".to_string(),
+                }),
             ServiceError::UpsertDocEmbeddingPgError(_) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
                     message: "Error upserting DocEmbedding to Postgres.".to_string(),
-                    error_code: "0007".to_string(),
+                    error_code: "0008".to_string(),
                 })
             }
         }

@@ -7,7 +7,7 @@ use crate::{
     errors::ServiceError,
     operators::{
         doc_embedding_operator::upsert_doc_embedding_pg_query, embedding_operator, parse_operator,
-        qdrant_operator::upsert_doc_embedding_qdrant_query,
+        qdrant_operator::delete_reinsert_doc_embedding_qdrant_query,
     },
 };
 
@@ -42,9 +42,15 @@ pub async fn index_document(
         None,
     );
 
-    upsert_doc_embedding_pg_query(doc_embedding_to_upsert.clone(), pool_inner).await?;
+    let qdrant_point_id_to_delete =
+        upsert_doc_embedding_pg_query(doc_embedding_to_upsert.clone(), pool_inner).await?;
 
-    upsert_doc_embedding_qdrant_query(doc_embedding_to_upsert.clone(), embedding.clone()).await?;
+    delete_reinsert_doc_embedding_qdrant_query(
+        qdrant_point_id_to_delete,
+        doc_embedding_to_upsert.clone(),
+        embedding.clone(),
+    )
+    .await?;
 
     Ok(HttpResponse::Ok().json(embedding))
 }
