@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, ResponseError};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
     pub message: String,
     pub error_code: String,

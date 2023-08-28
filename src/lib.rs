@@ -1,10 +1,10 @@
 use actix_web::{web, App, HttpServer};
 use sqlx::postgres::PgPoolOptions;
 
-mod data;
-mod errors;
-mod handlers;
-mod operators;
+pub mod data;
+pub mod errors;
+pub mod handlers;
+pub mod operators;
 
 pub fn check_environment_variables() -> Result<(), String> {
     std::env::var("API_KEY").map_err(|_| "API_KEY environment variable not set.")?;
