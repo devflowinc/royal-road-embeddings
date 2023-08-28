@@ -26,9 +26,8 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
 ) -> Result<(), ServiceError> {
     let client = get_qdrant_connection().await?;
 
-    if point_id_to_delete.is_some() {
+    if let Some(point_id_to_delete) = point_id_to_delete {
         let point_ids_to_delete: Vec<PointId> = vec![point_id_to_delete
-            .expect("id_to_delete must not be None if attempting to delete")
             .to_string()
             .into()];
 
