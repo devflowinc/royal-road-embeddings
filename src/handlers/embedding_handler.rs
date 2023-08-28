@@ -57,7 +57,5 @@ pub async fn index_document(
     )
     .await?;
 
-    Ok(HttpResponse::Ok().json(IndexDocumentResponse { 
-        embedding
-    }))
+    Ok(HttpResponse::Ok().json(IndexDocumentResponse { embedding }))
 }

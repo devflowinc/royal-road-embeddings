@@ -10,7 +10,7 @@ use either::Either;
 #[serde(transparent)]
 struct IndexDocumentReturn {
     #[serde(with = "either::serde_untagged")]
-    response: Either<IndexDocumentResponse, ErrorResponse>
+    response: Either<IndexDocumentResponse, ErrorResponse>,
 }
 #[actix_rt::test]
 async fn test_index_document() {
@@ -24,18 +24,17 @@ async fn test_index_document() {
 
     let response = req
         .post("http://localhost:8090/api/index_document")
-        .header("X-API-KEY", key).json(&document)
+        .header("X-API-KEY", key)
+        .json(&document)
         .send()
         .await;
     assert!(response.is_ok());
     let res = response.unwrap();
     let json = res.json::<IndexDocumentReturn>().await.unwrap();
     match json.response {
-        Either::Left(a) => {
-            panic!("{:?}", a)
-        },
+        Either::Left(_a) => (),
         Either::Right(b) => {
-            panic!("{:?} code {:}",b.message,  b.error_code);
+            panic!("{:?} code {:}", b.message, b.error_code);
         }
     }
 }
@@ -52,4 +51,3 @@ async fn check_auth() {
     assert!(res.is_ok());
     assert_eq!(res.unwrap().status(), 204);
 }
-

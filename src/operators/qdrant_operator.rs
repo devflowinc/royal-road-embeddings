@@ -27,9 +27,7 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
     let client = get_qdrant_connection().await?;
 
     if let Some(point_id_to_delete) = point_id_to_delete {
-        let point_ids_to_delete: Vec<PointId> = vec![point_id_to_delete
-            .to_string()
-            .into()];
+        let point_ids_to_delete: Vec<PointId> = vec![point_id_to_delete.to_string().into()];
 
         let mut filter = qdrant::Filter::default();
 
@@ -60,7 +58,7 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
     };
 
     client
-        .upsert_points("doc_embeddings", vec![point], None)
+        .upsert_points_blocking("doc_embeddings", vec![point], None)
         .await
         .map_err(ServiceError::UpsertDocEmbeddingQdrantError)?;
 

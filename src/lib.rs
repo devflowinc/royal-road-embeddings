@@ -1,5 +1,8 @@
 use actix_web::{web, App, HttpServer};
+use qdrant_client::qdrant::{CreateCollection, VectorsConfig, VectorParams, Distance};
 use sqlx::postgres::PgPoolOptions;
+
+use crate::operators::qdrant_operator::get_qdrant_connection;
 
 pub mod data;
 pub mod errors;
@@ -36,6 +39,33 @@ pub async fn main() -> std::io::Result<()> {
         .run(&pool)
         .await
         .expect("Failed to migrate database.");
+
+    let qdrant_client = get_qdrant_connection().await.unwrap();
+    let qdrant_collection =
+        std::env::var("QDRANT_COLLECTION").unwrap_or("doc_embeddings".to_owned());
+    let embedding_size = std::env::var("EMBEDDING_SIZE").unwrap_or("1024".to_owned());
+    let embedding_size = embedding_size.parse::<u64>().unwrap_or(1024);
+
+    let _ = qdrant_client
+        .create_collection(&CreateCollection {
+            collection_name: qdrant_collection,
+            vectors_config: Some(VectorsConfig {
+                config: Some(qdrant_client::qdrant::vectors_config::Config::Params(
+                    VectorParams {
+                        size: embedding_size,
+                        distance: Distance::Cosine.into(),
+                        hnsw_config: None,
+                        quantization_config: None,
+                        on_disk: None,
+                    },
+                )),
+            }),
+            ..Default::default()
+        })
+        .await
+        .map_err(|err| {
+            println!("Failed to create collection: {:?}", err);
+        });
 
     log::info!("starting HTTP server at http://localhost:8090");
 

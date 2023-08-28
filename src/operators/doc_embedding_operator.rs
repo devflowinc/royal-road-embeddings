@@ -35,7 +35,6 @@ pub async fn upsert_doc_embedding_pg_query(
             story_id = EXCLUDED.story_id,
             doc_num = EXCLUDED.doc_num,
             qdrant_point_id = EXCLUDED.qdrant_point_id,
-            created_at = EXCLUDED.created_at,
             updated_at = EXCLUDED.updated_at
         "#,
         doc_embedding.id,
