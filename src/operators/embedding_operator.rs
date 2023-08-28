@@ -17,14 +17,15 @@ pub async fn create_embedding(message: String) -> Result<Vec<f32>, ServiceError>
 }
 
 pub async fn get_average_embedding(document_chunks: Vec<String>) -> Result<Vec<f32>, ServiceError> {
-
     let embedding_server_call =
         std::env::var("EMBEDDING_SERVER_CALL").expect("EMBEDDING_SERVER_CALL must be set");
 
     let client = reqwest::Client::new();
     let resp = client
         .post(embedding_server_call)
-        .json(&CustomServerData { input: document_chunks })
+        .json(&CustomServerData {
+            input: document_chunks,
+        })
         .send()
         .await
         .map_err(ServiceError::EmbeddingServerCallError)?
