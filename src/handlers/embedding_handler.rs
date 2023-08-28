@@ -20,6 +20,11 @@ pub struct IndexDocumentRequest {
     pub doc_num: i64,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct IndexDocumentResponse {
+    embedding: Vec<f32>,
+}
+
 pub async fn index_document(
     document: web::Json<IndexDocumentRequest>,
     pool: web::Data<Pool<Postgres>>,
@@ -52,5 +57,7 @@ pub async fn index_document(
     )
     .await?;
 
-    Ok(HttpResponse::Ok().json(embedding))
+    Ok(HttpResponse::Ok().json(IndexDocumentResponse { 
+        embedding
+    }))
 }
