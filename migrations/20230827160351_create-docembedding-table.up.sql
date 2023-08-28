@@ -7,7 +7,7 @@ CREATE TABLE doc_embeddings (
     qdrant_point_id UUID NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_id_story_id_pair UNIQUE (id, story_id)
+    CONSTRAINT unique_story_id_doc_num_pair UNIQUE (story_id, doc_num)
 );
  
 CREATE TRIGGER update_updated_at
