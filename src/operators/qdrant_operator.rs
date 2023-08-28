@@ -1,6 +1,9 @@
 use qdrant_client::{
     prelude::{QdrantClient, QdrantClientConfig},
-    qdrant::PointStruct,
+    qdrant::{
+        self, condition::ConditionOneOf, points_selector::PointsSelectorOneOf, HasIdCondition,
+        PointId, PointStruct, PointsSelector,
+    },
 };
 
 use crate::{
@@ -16,11 +19,41 @@ pub async fn get_qdrant_connection() -> Result<QdrantClient, ServiceError> {
     QdrantClient::new(Some(config)).map_err(ServiceError::QdrantConnectionError)
 }
 
-pub async fn upsert_doc_embedding_qdrant_query(
+pub async fn delete_reinsert_doc_embedding_qdrant_query(
+    point_id_to_delete: Option<uuid::Uuid>,
     doc_embedding: DocEmbedding,
     vector: Vec<f32>,
 ) -> Result<(), ServiceError> {
     let client = get_qdrant_connection().await?;
+
+    if point_id_to_delete.is_some() {
+        let point_ids_to_delete: Vec<PointId> = vec![point_id_to_delete
+            .expect("id_to_delete must not be None if attempting to delete")
+            .to_string()
+            .into()];
+
+        let mut filter = qdrant::Filter::default();
+
+        filter.should.push(qdrant::Condition {
+            condition_one_of: Some(ConditionOneOf::HasId(HasIdCondition {
+                has_id: point_ids_to_delete,
+            })),
+        });
+
+        let points_selector = PointsSelector {
+            points_selector_one_of: Some(PointsSelectorOneOf::Filter(qdrant::Filter {
+                should: vec![],
+                must: vec![],
+                must_not: vec![],
+            })),
+        };
+
+        client
+            .delete_points("doc_embeddings", &points_selector, None)
+            .await
+            .map_err(ServiceError::DeleteDocEmbeddingQdrantError)?;
+    }
+
     let point = PointStruct {
         id: Some(doc_embedding.qdrant_point_id.to_string().into()),
         vectors: Some(vector.into()),
@@ -28,7 +61,7 @@ pub async fn upsert_doc_embedding_qdrant_query(
     };
 
     client
-        .upsert_points("collection_name", vec![point], None)
+        .upsert_points("doc_embeddings", vec![point], None)
         .await
         .map_err(ServiceError::UpsertDocEmbeddingQdrantError)?;
 
