@@ -63,24 +63,16 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
     if let Some(point_id_to_delete) = point_id_to_delete {
         let point_ids_to_delete: Vec<PointId> = vec![point_id_to_delete.to_string().into()];
 
-        let mut filter = qdrant::Filter::default();
-
-        filter.should.push(qdrant::Condition {
-            condition_one_of: Some(ConditionOneOf::HasId(HasIdCondition {
+        let filter = qdrant::Filter {
+            should: vec![
+                HasIdCondition {
                 has_id: point_ids_to_delete,
-            })),
-        });
-
-        let points_selector = PointsSelector {
-            points_selector_one_of: Some(PointsSelectorOneOf::Filter(qdrant::Filter {
-                should: vec![],
-                must: vec![],
-                must_not: vec![],
-            })),
+            }
+            .into()],
+            ..Default::default()
         };
-
         client
-            .delete_points("doc_embeddings", &points_selector, None)
+            .delete_points("doc_embeddings", &filter.into(), None)
             .await
             .map_err(ServiceError::DeleteDocEmbeddingQdrantError)?;
     }
