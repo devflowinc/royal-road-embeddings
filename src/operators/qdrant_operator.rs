@@ -1,8 +1,9 @@
 use qdrant_client::{
     prelude::{QdrantClient, QdrantClientConfig},
     qdrant::{
-        self, condition::ConditionOneOf, points_selector::PointsSelectorOneOf, HasIdCondition,
-        PointId, PointStruct, PointsSelector,
+        self, condition::ConditionOneOf, points_selector::PointsSelectorOneOf, CreateCollection,
+        Distance, HasIdCondition, PointId, PointStruct, PointsSelector, VectorParams,
+        VectorsConfig,
     },
 };
 
@@ -17,6 +18,38 @@ pub async fn get_qdrant_connection() -> Result<QdrantClient, ServiceError> {
     let mut config = QdrantClientConfig::from_url(qdrant_url.as_str());
     config.api_key = Some(qdrant_api_key);
     QdrantClient::new(Some(config)).map_err(ServiceError::QdrantConnectionError)
+}
+
+pub async fn create_doc_group_collection_qdrant_query(
+    doc_group_size: i32,
+) -> Result<(), ServiceError> {
+    let qdrant_client = get_qdrant_connection().await.unwrap();
+
+    let embedding_size = std::env::var("EMBEDDING_SIZE").unwrap_or("1024".to_owned());
+    let embedding_size = embedding_size.parse::<u64>().unwrap_or(1024);
+
+    let _ = qdrant_client
+        .create_collection(&CreateCollection {
+            collection_name: format!("doc_group_{}", doc_group_size),
+            vectors_config: Some(VectorsConfig {
+                config: Some(qdrant_client::qdrant::vectors_config::Config::Params(
+                    VectorParams {
+                        size: embedding_size,
+                        distance: Distance::Cosine.into(),
+                        hnsw_config: None,
+                        quantization_config: None,
+                        on_disk: None,
+                    },
+                )),
+            }),
+            ..Default::default()
+        })
+        .await
+        .map_err(|err| {
+            log::info!("Failed to create collection: {:?}", err);
+        });
+
+    Ok(())
 }
 
 pub async fn delete_reinsert_doc_embedding_qdrant_query(

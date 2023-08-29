@@ -1,5 +1,5 @@
 use actix_web::{web, App, HttpServer};
-use qdrant_client::qdrant::{CreateCollection, VectorsConfig, VectorParams, Distance};
+use qdrant_client::qdrant::{CreateCollection, Distance, VectorParams, VectorsConfig};
 use sqlx::postgres::PgPoolOptions;
 
 use crate::operators::qdrant_operator::get_qdrant_connection;
@@ -64,7 +64,7 @@ pub async fn main() -> std::io::Result<()> {
         })
         .await
         .map_err(|err| {
-            println!("Failed to create collection: {:?}", err);
+            log::info!("Failed to create collection: {:?}", err);
         });
 
     log::info!("starting HTTP server at http://localhost:8090");
