@@ -3,7 +3,11 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
 
 use crate::{
-    errors::ServiceError, operators::qdrant_operator::create_doc_group_collection_qdrant_query,
+    errors::ServiceError,
+    operators::{
+        doc_group_operator::get_doc_group_qdrant_ids_pg_query,
+        qdrant_operator::create_doc_group_collection_qdrant_query,
+    },
 };
 
 use super::auth_handler::AuthRequired;
@@ -35,6 +39,12 @@ pub async fn recommend_document_group(
     pool: web::Data<Pool<Postgres>>,
     _: AuthRequired,
 ) -> Result<HttpResponse, ServiceError> {
+    let positive_qdrant_ids = get_doc_group_qdrant_ids_pg_query(
+        recommend_document_request.story_ids.clone(),
+        recommend_document_request.doc_group_size,
+        pool.get_ref().clone(),
+    )
+    .await?;
 
     Ok(HttpResponse::Ok().into())
 }
