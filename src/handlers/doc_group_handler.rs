@@ -23,3 +23,18 @@ pub async fn create_document_group(
 
     Ok(HttpResponse::Ok().into())
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RecommendDocumentRequest {
+    pub doc_group_size: i32,
+    pub story_ids: Vec<i64>,
+}
+
+pub async fn recommend_document_group(
+    recommend_document_request: web::Json<RecommendDocumentRequest>,
+    pool: web::Data<Pool<Postgres>>,
+    _: AuthRequired,
+) -> Result<HttpResponse, ServiceError> {
+
+    Ok(HttpResponse::Ok().into())
+}
