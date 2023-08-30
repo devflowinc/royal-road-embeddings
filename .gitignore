@@ -33,4 +33,3 @@ env/
 dist/
 build/
 *.egg-info/
-src/handlers/search_handler.rs
