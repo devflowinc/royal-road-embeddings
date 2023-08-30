@@ -1,10 +1,8 @@
 use qdrant_client::{
     prelude::{QdrantClient, QdrantClientConfig},
     qdrant::{
-        self, condition::ConditionOneOf, points_selector::PointsSelectorOneOf,
-        with_payload_selector::SelectorOptions, CreateCollection, Distance, HasIdCondition,
-        PointId, PointStruct, PointsSelector, RecommendPoints, VectorParams, VectorsConfig,
-        WithPayloadSelector,
+        self, with_payload_selector::SelectorOptions, CreateCollection, Distance, HasIdCondition,
+        PointId, PointStruct, RecommendPoints, VectorParams, VectorsConfig, WithPayloadSelector,
     },
 };
 
@@ -53,6 +51,49 @@ pub async fn create_doc_group_collection_qdrant_query(
     Ok(())
 }
 
+pub async fn get_doc_embeddings_qdrant_query(
+    qdrant_points: Vec<uuid::Uuid>,
+) -> Result<Vec<Vec<f32>>, ServiceError> {
+    let qdrant_client = get_qdrant_connection().await?;
+    let scroll_points = qdrant::ScrollPoints {
+        filter: Some(qdrant::Filter {
+            should: vec![HasIdCondition {
+                has_id: qdrant_points
+                    .into_iter()
+                    .map(|id| id.to_string().into())
+                    .collect(),
+            }
+            .into()],
+            ..Default::default()
+        }),
+        limit: None,
+        with_vectors: Some(true.into()),
+        ..Default::default()
+    };
+
+    let scroll_response = qdrant_client
+        .scroll(&scroll_points)
+        .await
+        .map_err(ServiceError::ScrollDocEmbeddingQdrantError)?;
+
+    Ok(scroll_response
+        .result
+        .into_iter()
+        .flat_map(|res| match res.vectors?.vectors_options? {
+            qdrant::vectors::VectorsOptions::Vector(vector) => Some(vector.data),
+            _ => None,
+        })
+        .collect::<Vec<Vec<f32>>>())
+}
+
+pub async fn upsert_doc_group_embedding_qdrant_query(
+    vector: Vec<f32>,
+    story_id: i64,
+    doc_group_size: i32,
+) -> Result<(), ServiceError> {
+    unimplemented!("upsert_doc_group_embedding_qdrant_query ")
+}
+
 pub async fn delete_reinsert_doc_embedding_qdrant_query(
     point_id_to_delete: Option<uuid::Uuid>,
     doc_embedding: DocEmbedding,
@@ -64,13 +105,13 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
         let point_ids_to_delete: Vec<PointId> = vec![point_id_to_delete.to_string().into()];
 
         let filter = qdrant::Filter {
-            should: vec![
-                HasIdCondition {
+            should: vec![HasIdCondition {
                 has_id: point_ids_to_delete,
             }
             .into()],
             ..Default::default()
         };
+
         client
             .delete_points("doc_embeddings", &filter.into(), None)
             .await

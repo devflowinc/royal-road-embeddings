@@ -79,7 +79,11 @@ pub async fn main() -> std::io::Result<()> {
                 .route(
                     "/index_document",
                     web::post().to(handlers::embedding_handler::index_document),
-                ),
+                )
+                .service(web::scope("/doc_group").route(
+                    "/",
+                    web::post().to(handlers::doc_group_handler::create_document_group),
+                )),
         )
     })
     .bind(("0.0.0.0", 8090))?
