@@ -68,13 +68,6 @@ pub struct GetDocumentGroupResponse {
     pub embeddings: Vec<Vec<f32>>,
 }
 
-pub async fn get_document_group_embeddings(
-    group_document_request: web::Query<GetDocumentGroupRequest>,
-    _: AuthRequired,
-) -> Result<HttpResponse, ServiceError> {
-    Err(ServiceError::NotImplemented)
-}
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RecommendDocumentRequest {
     pub doc_group_size: i32,

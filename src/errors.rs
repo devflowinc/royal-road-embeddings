@@ -30,6 +30,12 @@ pub enum ServiceError {
 impl ResponseError for ServiceError {
     fn error_response(&self) -> HttpResponse {
         match self {
+            ServiceError::NotImplemented => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Not implemented.".to_string(),
+                    error_code: "0420".to_string(),
+                })
+            }
             ServiceError::InvalidAPIKey => HttpResponse::Unauthorized().json(ErrorResponse {
                 message: "Invalid API key provided.".to_string(),
                 error_code: "0001".to_string(),
@@ -85,13 +91,26 @@ impl ResponseError for ServiceError {
                     error_code: "0010".to_string(),
                 })
             }
-            ServiceError::NotImplemented => {
-                unimplemented!()
-            }
-            ServiceError::GetDocEmbeddingsPgError(_) => todo!(),
-            ServiceError::ScrollDocEmbeddingQdrantError(_) => todo!(),
-            ServiceError::VectorToArrayError(_) => todo!(),
-            ServiceError::UpsertDocGroupEmbeddingPgError(_) => todo!(),
+            ServiceError::GetDocEmbeddingsPgError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error getting DocEmbeddings from Postgres.".to_string(),
+                    error_code: "0011".to_string(),
+                }),
+            ServiceError::ScrollDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error getting DocEmbeddings from Qdrant.".to_string(),
+                    error_code: "0012".to_string(),
+                }),
+            ServiceError::VectorToArrayError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error converting vector to array.".to_string(),
+                    error_code: "0013".to_string(),
+                }),
+            ServiceError::UpsertDocGroupEmbeddingPgError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error upserting DocGroupEmbedding to Postgres.".to_string(),
+                    error_code: "0014".to_string(),
+                }),
         }
     }
 }
