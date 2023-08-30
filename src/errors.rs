@@ -19,6 +19,7 @@ pub enum ServiceError {
     DeleteDocEmbeddingQdrantError(anyhow::Error),
     UpsertDocEmbeddingPgError(sqlx::Error),
     SelectDocGroupQdrantIdsPgError(sqlx::Error),
+    RecommendQdrantDocEmbeddingGroupError(anyhow::Error),
 }
 
 impl ResponseError for ServiceError {
@@ -73,6 +74,12 @@ impl ResponseError for ServiceError {
                     message: "Error selecting DocGroup Qdrant IDs from Postgres.".to_string(),
                     error_code: "0009".to_string(),
                 }),
+            ServiceError::RecommendQdrantDocEmbeddingGroupError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error recommending DocEmbedding group from Qdrant.".to_string(),
+                    error_code: "0010".to_string(),
+                })
+            }
         }
     }
 }

@@ -1,9 +1,10 @@
 use qdrant_client::{
     prelude::{QdrantClient, QdrantClientConfig},
     qdrant::{
-        self, condition::ConditionOneOf, points_selector::PointsSelectorOneOf, CreateCollection,
-        Distance, HasIdCondition, PointId, PointStruct, PointsSelector, VectorParams,
-        VectorsConfig,
+        self, condition::ConditionOneOf, points_selector::PointsSelectorOneOf,
+        with_payload_selector::SelectorOptions, CreateCollection, Distance, HasIdCondition,
+        PointId, PointStruct, PointsSelector, RecommendPoints, VectorParams, VectorsConfig,
+        WithPayloadSelector,
     },
 };
 
@@ -96,4 +97,51 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
         .map_err(ServiceError::UpsertDocEmbeddingQdrantError)?;
 
     Ok(())
+}
+
+pub async fn reccomend_group_doc_embeddings_qdrant_query(
+    positive_qdrant_ids: Vec<uuid::Uuid>,
+    doc_group_size: i32,
+    limit: Option<u64>,
+    page: Option<u64>,
+) -> Result<Vec<i64>, ServiceError> {
+    let client = get_qdrant_connection().await?;
+
+    let recommend_result = client
+        .recommend(&RecommendPoints {
+            collection_name: format!("doc_group_{}", doc_group_size),
+            positive: positive_qdrant_ids
+                .into_iter()
+                .map(|id| id.to_string().into())
+                .collect(),
+            negative: vec![],
+            filter: None,
+            limit: limit.unwrap_or(10) * 2,
+            with_payload: Some(WithPayloadSelector {
+                selector_options: Some(SelectorOptions::Enable(true)),
+            }),
+            params: None,
+            score_threshold: None,
+            offset: Some(page.unwrap_or(0) * (limit.unwrap_or(10) * 2)),
+            using: None,
+            with_vectors: None,
+            lookup_from: None,
+            read_consistency: None,
+        })
+        .await
+        .map_err(ServiceError::RecommendQdrantDocEmbeddingGroupError)?;
+
+    let mut story_ids = vec![];
+
+    for point in recommend_result.result {
+        let story_id: i64 = point
+            .payload
+            .get("story_id")
+            .expect("story_id not found")
+            .as_integer()
+            .expect("story_id is not an integer");
+        story_ids.push(story_id);
+    }
+
+    Ok(story_ids)
 }
