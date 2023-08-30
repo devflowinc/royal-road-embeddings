@@ -50,11 +50,11 @@ impl From<DocEmbedding> for DocEmbeddingQdrantPayload {
     }
 }
 
-impl Into<HashMap<String, qdrant_client::prelude::Value>> for DocEmbeddingQdrantPayload {
-    fn into(self) -> HashMap<String, Value> {
+impl From<DocEmbeddingQdrantPayload> for HashMap<String, qdrant_client::prelude::Value> {
+    fn from(val: DocEmbeddingQdrantPayload) -> HashMap<String, Value> {
         let mut map = HashMap::new();
-        map.insert("story_id".to_string(), self.story_id.to_string().into());
-        map.insert("doc_num".to_string(), self.doc_num.to_string().into());
+        map.insert("story_id".to_string(), val.story_id.to_string().into());
+        map.insert("doc_num".to_string(), val.doc_num.to_string().into());
         map
     }
 }

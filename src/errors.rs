@@ -20,6 +20,11 @@ pub enum ServiceError {
     UpsertDocEmbeddingPgError(sqlx::Error),
     SelectDocGroupQdrantIdsPgError(sqlx::Error),
     RecommendQdrantDocEmbeddingGroupError(anyhow::Error),
+    GetDocEmbeddingsPgError(sqlx::Error),
+    ScrollDocEmbeddingQdrantError(anyhow::Error),
+    NotImplemented,
+    VectorToArrayError(ndarray::ShapeError),
+    UpsertDocGroupEmbeddingPgError(sqlx::Error),
 }
 
 impl ResponseError for ServiceError {
@@ -80,6 +85,13 @@ impl ResponseError for ServiceError {
                     error_code: "0010".to_string(),
                 })
             }
+            ServiceError::NotImplemented => {
+                unimplemented!()
+            }
+            ServiceError::GetDocEmbeddingsPgError(_) => todo!(),
+            ServiceError::ScrollDocEmbeddingQdrantError(_) => todo!(),
+            ServiceError::VectorToArrayError(_) => todo!(),
+            ServiceError::UpsertDocGroupEmbeddingPgError(_) => todo!(),
         }
     }
 }

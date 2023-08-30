@@ -1,6 +1,13 @@
 use sqlx::{Pool, Postgres};
 
-use crate::{data::models::DocEmbedding, errors::ServiceError};
+use crate::{
+    data::models::DocEmbedding, errors::ServiceError,
+    handlers::doc_group_handler::IndexDocumentGroupRequest,
+};
+
+use super::embedding_operator::average_embeddings;
+use super::qdrant_operator::get_doc_embeddings_qdrant_query;
+use super::qdrant_operator::upsert_doc_group_embedding_qdrant_query;
 
 pub struct QdrantPointIdContainer {
     pub qdrant_point_id: uuid::Uuid,
@@ -50,4 +57,86 @@ pub async fn upsert_doc_embedding_pg_query(
     .map_err(ServiceError::UpsertDocEmbeddingPgError)?;
 
     Ok(qdrant_point_id.map(|qdrant_point_id_container| qdrant_point_id_container.qdrant_point_id))
+}
+
+pub async fn upsert_doc_group_embedding_pg_query() -> Result<(), ServiceError> {
+    unimplemented!("upsert_doc_group_embedding_pg_query, needed for persistance")
+}
+
+pub async fn revert_doc_group_embedding_pg_query() -> Result<(), ServiceError> {
+    unimplemented!("revert_doc_group_embedding_pg_query, needed for atomicity!!!")
+}
+
+pub async fn create_doc_group_embedding(
+    groups: IndexDocumentGroupRequest,
+    pool: Pool<Postgres>,
+) -> Result<(), ServiceError> {
+    let qdrant_points = match groups.clone() {
+        IndexDocumentGroupRequest::All { .. } => sqlx::query_as!(
+            QdrantPointIdContainer,
+            r#"
+                SELECT qdrant_point_id
+                FROM doc_embeddings
+                ORDER BY doc_num ASC
+                "#,
+        )
+        .fetch_all(&pool)
+        .await
+        .map_err(ServiceError::GetDocEmbeddingsPgError)?,
+        IndexDocumentGroupRequest::Stories { story_ids, .. } => sqlx::query_as!(
+            QdrantPointIdContainer,
+            r#"
+                SELECT qdrant_point_id
+                FROM doc_embeddings
+                WHERE story_id = ANY($1)
+                ORDER BY doc_num ASC
+                "#,
+            &story_ids[..]
+        )
+        .fetch_all(&pool)
+        .await
+        .map_err(ServiceError::GetDocEmbeddingsPgError)?,
+        IndexDocumentGroupRequest::Story { story_id, .. } => sqlx::query_as!(
+            QdrantPointIdContainer,
+            r#"
+				SELECT qdrant_point_id
+				FROM doc_embeddings
+				WHERE story_id = $1
+			"#,
+            story_id
+        )
+        .fetch_all(&pool)
+        .await
+        .map_err(ServiceError::GetDocEmbeddingsPgError)?,
+    };
+
+    // fetch all embeddings
+    let embeddings =
+        get_doc_embeddings_qdrant_query(qdrant_points.iter().map(|x| x.qdrant_point_id).collect())
+            .await?;
+
+    let average = average_embeddings(embeddings)?;
+
+    match groups {
+        IndexDocumentGroupRequest::Story {
+            story_id,
+            doc_group_size,
+        } => {
+            // upsert doc group metadata
+            upsert_doc_group_embedding_pg_query().await?;
+            // upsert doc group embedding
+            let qdrant_result =
+                upsert_doc_group_embedding_qdrant_query(average.to_vec(), story_id, doc_group_size)
+                    .await;
+
+            match qdrant_result {
+                Ok(_) => Ok(()),
+                Err(e) => {
+                    revert_doc_group_embedding_pg_query().await?;
+                    Err(e)
+                }
+            }
+        }
+        _ => unimplemented!("Not yet implemented for multiple stories at once"),
+    }
 }

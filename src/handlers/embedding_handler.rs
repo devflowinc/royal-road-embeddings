@@ -41,7 +41,7 @@ pub async fn index_document(
         None,
         document.doc_html.clone(),
         document.story_id,
-        document.doc_num.clone(),
+        document.doc_num,
         None,
         None,
         None,

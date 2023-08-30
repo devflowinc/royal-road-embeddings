@@ -6,6 +6,7 @@ use sqlx::{Pool, Postgres};
 use crate::{
     errors::ServiceError,
     operators::{
+        doc_embedding_operator::create_doc_group_embedding,
         doc_group_operator::get_doc_group_qdrant_ids_pg_query,
         qdrant_operator::{
             create_doc_group_collection_qdrant_query, reccomend_group_doc_embeddings_qdrant_query,
@@ -22,13 +23,56 @@ pub struct GroupDocumentRequest {
 }
 
 pub async fn create_document_group(
-    group_document_request: GroupDocumentRequest,
-    pool: web::Data<Pool<Postgres>>,
+    group_document_request: web::Json<GroupDocumentRequest>,
     _: AuthRequired,
 ) -> Result<HttpResponse, ServiceError> {
-    let _ = create_doc_group_collection_qdrant_query(group_document_request.doc_group_size).await;
+    create_doc_group_collection_qdrant_query(group_document_request.doc_group_size)
+        .await
+        .map(|_| HttpResponse::NoContent().into())
+}
 
-    Ok(HttpResponse::Ok().into())
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum IndexDocumentGroupRequest {
+    Stories {
+        doc_group_size: i32,
+        story_ids: Vec<i64>,
+    },
+    Story {
+        story_id: i64,
+        doc_group_size: i32,
+    },
+    All {
+        doc_group_size: i32,
+    },
+}
+
+pub async fn index_docuemnt_group(
+    req: web::Json<IndexDocumentGroupRequest>,
+    pool: Pool<Postgres>,
+    _: AuthRequired,
+) -> Result<HttpResponse, ServiceError> {
+    create_doc_group_embedding(req.into_inner(), pool)
+        .await
+        .map(|_| HttpResponse::NoContent().into())
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GetDocumentGroupRequest {
+    pub doc_group_size: i32,
+    pub story_id: i64,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GetDocumentGroupResponse {
+    pub embeddings: Vec<Vec<f32>>,
+}
+
+pub async fn get_document_group_embeddings(
+    group_document_request: web::Query<GetDocumentGroupRequest>,
+    _: AuthRequired,
+) -> Result<HttpResponse, ServiceError> {
+    Err(ServiceError::NotImplemented)
 }
 
 #[derive(Debug, Deserialize, Serialize)]
