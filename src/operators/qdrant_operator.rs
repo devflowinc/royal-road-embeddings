@@ -1,8 +1,9 @@
 use qdrant_client::{
     prelude::{QdrantClient, QdrantClientConfig},
     qdrant::{
-        self, with_payload_selector::SelectorOptions, CreateCollection, Distance, HasIdCondition,
-        PointId, PointStruct, RecommendPoints, VectorParams, VectorsConfig, WithPayloadSelector,
+        self, point_id::PointIdOptions, with_payload_selector::SelectorOptions, CreateCollection,
+        Distance, HasIdCondition, PointId, PointStruct, RecommendPoints, SearchPoints,
+        VectorParams, VectorsConfig, WithPayloadSelector,
     },
 };
 
@@ -177,4 +178,48 @@ pub async fn reccomend_group_doc_embeddings_qdrant_query(
     }
 
     Ok(story_ids)
+}
+
+pub struct QdrantPoints {
+    pub score: f32,
+    pub point_id: uuid::Uuid,
+    pub payload: DocEmbeddingQdrantPayload,
+}
+pub async fn search_qdrant_query(
+    embedding: Vec<f32>,
+    page: u64,
+    doc_group_size: Option<i32>,
+) -> Result<Vec<QdrantPoints>, ServiceError> {
+    let qdrant_client = get_qdrant_connection().await?;
+    let data = qdrant_client
+        .search_points(&SearchPoints {
+            collection_name: if doc_group_size.is_some() {
+                format!("doc_group_{}", doc_group_size.unwrap())
+            } else {
+                "doc_embeddings".to_owned()
+            },
+            vector: embedding,
+            limit: 10,
+            offset: Some((page - 1) * 10),
+            with_payload: Some(true.into()),
+            ..Default::default()
+        })
+        .await
+        .map_err(ServiceError::QdrantSearchError)?;
+
+    log::error!("{}", format!("Qdrant search results: {:?}", data));
+    let point_ids: Vec<QdrantPoints> = data
+        .result
+        .iter()
+        .filter_map(|point| match point.clone().id?.point_id_options? {
+            PointIdOptions::Uuid(id) => Some(QdrantPoints {
+                score: point.score,
+                point_id: uuid::Uuid::parse_str(&id).ok()?,
+                payload: point.payload.clone().into(),
+            }),
+            PointIdOptions::Num(_) => None,
+        })
+        .collect();
+
+    Ok(point_ids)
 }

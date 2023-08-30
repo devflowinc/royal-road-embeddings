@@ -25,6 +25,8 @@ pub enum ServiceError {
     NotImplemented,
     VectorToArrayError(ndarray::ShapeError),
     UpsertDocGroupEmbeddingPgError(sqlx::Error),
+    QdrantSearchError(anyhow::Error),
+    PgSearchError(sqlx::Error),
 }
 
 impl ResponseError for ServiceError {
@@ -111,6 +113,18 @@ impl ResponseError for ServiceError {
                     message: "Error upserting DocGroupEmbedding to Postgres.".to_string(),
                     error_code: "0014".to_string(),
                 }),
+                ServiceError::QdrantSearchError(_) => {
+                    HttpResponse::InternalServerError().json(ErrorResponse {
+                        message: "Error searching Qdrant.".to_string(),
+                        error_code: "0015".to_string(),
+                    })
+                }
+                ServiceError::PgSearchError(_) => {
+                    HttpResponse::InternalServerError().json(ErrorResponse {
+                        message: "Error searching Postgres.".to_string(),
+                        error_code: "0016".to_string(),
+                    })
+                }
         }
     }
 }

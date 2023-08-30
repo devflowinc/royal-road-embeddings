@@ -1,4 +1,3 @@
-use actix_rt;
 use royal_road_embeddings::{
     errors::ErrorResponse,
     handlers::embedding_handler::{IndexDocumentRequest, IndexDocumentResponse},

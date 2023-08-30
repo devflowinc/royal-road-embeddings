@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{middleware, web, App, HttpServer};
 use qdrant_client::qdrant::{CreateCollection, Distance, VectorParams, VectorsConfig};
 use sqlx::postgres::PgPoolOptions;
 
@@ -70,21 +70,24 @@ pub async fn main() -> std::io::Result<()> {
     log::info!("starting HTTP server at http://localhost:8090");
 
     HttpServer::new(move || {
-        App::new().app_data(web::Data::new(pool.clone())).service(
-            web::scope("/api")
-                .route(
-                    "/check_key",
-                    web::get().to(handlers::auth_handler::check_key),
-                )
-                .route(
-                    "/index_document",
-                    web::post().to(handlers::embedding_handler::index_document),
-                )
-                .service(web::scope("/doc_group").route(
-                    "/",
-                    web::post().to(handlers::doc_group_handler::create_document_group),
-                )),
-        )
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .wrap(middleware::Logger::default())
+            .service(
+                web::scope("/api")
+                    .route(
+                        "/check_key",
+                        web::get().to(handlers::auth_handler::check_key),
+                    )
+                    .route(
+                        "/index_document",
+                        web::post().to(handlers::embedding_handler::index_document),
+                    )
+                    .route(
+                        "/search",
+                        web::post().to(handlers::search_handler::semantic_search),
+                    ),
+            )
     })
     .bind(("0.0.0.0", 8090))?
     .run()
