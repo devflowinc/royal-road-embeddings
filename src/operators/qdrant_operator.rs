@@ -87,9 +87,9 @@ pub async fn get_doc_embeddings_qdrant_query(
 }
 
 pub async fn upsert_doc_group_embedding_qdrant_query(
-    vector: Vec<f32>,
-    story_id: i64,
-    doc_group_size: i32,
+    _vector: Vec<f32>,
+    _story_id: i64,
+    _doc_group_size: i32,
 ) -> Result<(), ServiceError> {
     unimplemented!("upsert_doc_group_embedding_qdrant_query ")
 }

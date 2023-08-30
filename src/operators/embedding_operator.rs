@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 
 use crate::errors::ServiceError;
 
