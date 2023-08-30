@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use qdrant_client::prelude::Value;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -51,11 +50,30 @@ impl From<DocEmbedding> for DocEmbeddingQdrantPayload {
 }
 
 impl From<DocEmbeddingQdrantPayload> for HashMap<String, qdrant_client::prelude::Value> {
-    fn from(val: DocEmbeddingQdrantPayload) -> HashMap<String, Value> {
+    fn from(val: DocEmbeddingQdrantPayload) -> Self {
         let mut map = HashMap::new();
         map.insert("story_id".to_string(), val.story_id.to_string().into());
         map.insert("doc_num".to_string(), val.doc_num.to_string().into());
         map
+    }
+}
+
+impl From<HashMap<String, qdrant_client::prelude::Value>> for DocEmbeddingQdrantPayload {
+    fn from(value: HashMap<String, qdrant_client::prelude::Value>) -> Self {
+        Self {
+            story_id: value
+                .get("story_id")
+                .unwrap_or(&qdrant_client::qdrant::Value { kind: Option::None })
+                .to_string()
+                .parse::<i64>()
+                .unwrap_or(0),
+            doc_num: value
+                .get("doc_num")
+                .unwrap_or(&qdrant_client::qdrant::Value { kind: Option::None })
+                .to_string()
+                .parse::<i64>()
+                .unwrap_or(0),
+        }
     }
 }
 
