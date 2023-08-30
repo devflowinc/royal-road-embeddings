@@ -3,7 +3,6 @@ from typing import List
 from transformers import AutoTokenizer, AutoModel
 import uvicorn
 import torch
-import numpy as np
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
