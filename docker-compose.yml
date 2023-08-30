@@ -21,6 +21,11 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  embedding-server:
+    build:
+      context: ./python_src
+    ports:
+      - "5000:5000"
 volumes:
   qdrant_data:
   pgdata:
