@@ -8,7 +8,7 @@ use qdrant_client::{
 };
 
 use crate::{
-    data::models::{DocEmbedding, DocEmbeddingQdrantPayload},
+    data::models::{DocEmbedding, DocEmbeddingQdrantPayload, DocGroupEmbeddingQdrantPayload},
     errors::ServiceError,
 };
 
@@ -87,12 +87,39 @@ pub async fn get_doc_embeddings_qdrant_query(
         .collect::<Vec<Vec<f32>>>())
 }
 
-pub async fn upsert_doc_group_embedding_qdrant_query(
-    _vector: Vec<f32>,
-    _story_id: i64,
-    _doc_group_size: i32,
-) -> Result<(), ServiceError> {
-    unimplemented!("upsert_doc_group_embedding_qdrant_query ")
+/// Returns the PointStructs added
+pub async fn insert_doc_group_embedding_qdrant_query(
+    vectors: Vec<Vec<f32>>,
+    story_id: i64,
+    doc_group_size: i32,
+) -> Result<Vec<PointStruct>, ServiceError> {
+    let points: Vec<PointStruct> = vectors
+        .into_iter()
+        .enumerate()
+        .map(|(idx, vector)| PointStruct {
+            id: Some(uuid::Uuid::new_v4().to_string().into()),
+            vectors: Some(vector.into()),
+            payload: DocGroupEmbeddingQdrantPayload {
+                story_id,
+                doc_group_size,
+                index: idx,
+            }
+            .into(),
+        })
+        .collect();
+
+    let qdrant_client = get_qdrant_connection().await?;
+
+    qdrant_client
+        .upsert_points(
+            format!("doc_group_{}", doc_group_size),
+            points.clone(),
+            None,
+        )
+        .await
+        .map_err(ServiceError::UpsertDocGroupEmbeddingQdrantError)?;
+
+    Ok(points)
 }
 
 pub async fn delete_reinsert_doc_embedding_qdrant_query(
