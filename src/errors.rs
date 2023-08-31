@@ -27,6 +27,8 @@ pub enum ServiceError {
     UpsertDocGroupEmbeddingPgError(sqlx::Error),
     QdrantSearchError(anyhow::Error),
     PgSearchError(sqlx::Error),
+    UpsertDocGroupEmbeddingQdrantError(anyhow::Error),
+    InsertDocGroupEmbeddingPgError(sqlx::Error),
 }
 
 impl ResponseError for ServiceError {
@@ -93,38 +95,51 @@ impl ResponseError for ServiceError {
                     error_code: "0010".to_string(),
                 })
             }
-            ServiceError::GetDocEmbeddingsPgError(_) => HttpResponse::InternalServerError()
-                .json(ErrorResponse {
+            ServiceError::GetDocEmbeddingsPgError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
                     message: "Error getting DocEmbeddings from Postgres.".to_string(),
                     error_code: "0011".to_string(),
-                }),
+                })
+            }
             ServiceError::ScrollDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
                     message: "Error getting DocEmbeddings from Qdrant.".to_string(),
                     error_code: "0012".to_string(),
                 }),
-            ServiceError::VectorToArrayError(_) => HttpResponse::InternalServerError()
-                .json(ErrorResponse {
+            ServiceError::VectorToArrayError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
                     message: "Error converting vector to array.".to_string(),
                     error_code: "0013".to_string(),
-                }),
+                })
+            }
             ServiceError::UpsertDocGroupEmbeddingPgError(_) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
                     message: "Error upserting DocGroupEmbedding to Postgres.".to_string(),
                     error_code: "0014".to_string(),
                 }),
-                ServiceError::QdrantSearchError(_) => {
-                    HttpResponse::InternalServerError().json(ErrorResponse {
-                        message: "Error searching Qdrant.".to_string(),
-                        error_code: "0015".to_string(),
-                    })
-                }
-                ServiceError::PgSearchError(_) => {
-                    HttpResponse::InternalServerError().json(ErrorResponse {
-                        message: "Error searching Postgres.".to_string(),
-                        error_code: "0016".to_string(),
-                    })
-                }
+            ServiceError::QdrantSearchError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error searching Qdrant.".to_string(),
+                    error_code: "0015".to_string(),
+                })
+            }
+            ServiceError::PgSearchError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error searching Postgres.".to_string(),
+                    error_code: "0016".to_string(),
+                })
+            }
+            ServiceError::UpsertDocGroupEmbeddingQdrantError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error upserting DocGroupEmbedding to Qdrant.".to_string(),
+                    error_code: "0017".to_string(),
+                })
+            }
+            ServiceError::InsertDocGroupEmbeddingPgError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error inserting DocGroupEmbedding to Postgres.".to_string(),
+                    error_code: "0018".to_string(),
+                }),
         }
     }
 }

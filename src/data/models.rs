@@ -82,7 +82,7 @@ pub struct DocGroupEmbedding {
     pub id: uuid::Uuid,
     pub story_id: i64,
     pub doc_group_size: i32,
-    pub index: i32,
+    pub index: usize,
     pub qdrant_point_id: uuid::Uuid,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
@@ -93,7 +93,7 @@ impl DocGroupEmbedding {
         id: Option<uuid::Uuid>,
         story_id: i64,
         doc_group_size: i32,
-        index: i32,
+        index: usize,
         qdrant_point_id: Option<uuid::Uuid>,
         created_at: Option<chrono::NaiveDateTime>,
         updated_at: Option<chrono::NaiveDateTime>,
@@ -113,7 +113,7 @@ impl DocGroupEmbedding {
 pub struct DocGroupEmbeddingQdrantPayload {
     pub story_id: i64,
     pub doc_group_size: i32,
-    pub index: i32,
+    pub index: usize,
 }
 
 impl From<DocGroupEmbedding> for DocGroupEmbeddingQdrantPayload {
@@ -123,5 +123,20 @@ impl From<DocGroupEmbedding> for DocGroupEmbeddingQdrantPayload {
             doc_group_size: doc_group_embedding.doc_group_size,
             index: doc_group_embedding.index,
         }
+    }
+}
+
+impl From<DocGroupEmbeddingQdrantPayload> for HashMap<String, qdrant_client::prelude::Value> {
+    fn from(doc_group_embedding: DocGroupEmbeddingQdrantPayload) -> HashMap<String, Value> {
+        let mut map = HashMap::new();
+        map.insert(
+            "story_id".to_string(),
+            doc_group_embedding.story_id.to_string().into(),
+        );
+        map.insert(
+            "index".to_string(),
+            doc_group_embedding.index.to_string().into(),
+        );
+        map
     }
 }

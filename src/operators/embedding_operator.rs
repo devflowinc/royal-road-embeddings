@@ -47,6 +47,37 @@ pub fn average_embeddings(embeddings: Vec<Vec<f32>>) -> Result<Vec<f32>, Service
     Ok((arr.sum_axis(ndarray::Axis(0)) / (embeddings.len() as f32)).to_vec())
 }
 
+pub fn group_average_embeddings_better(
+    embeddings: Vec<Vec<f32>>,
+    group_size: i32,
+) -> Result<Array2<f32>, ServiceError> {
+    let shape = (
+        ceil_div(embeddings.len(), group_size as usize),
+        group_size as usize,
+        embeddings[0].len(),
+    );
+    let flat: Vec<f32> = embeddings.iter().flatten().cloned().collect();
+    let arr: ndarray::Array3<f32> =
+        ndarray::Array3::from_shape_vec(shape, flat).map_err(ServiceError::VectorToArrayError)?;
+
+    Ok(arr.sum_axis(ndarray::Axis(1)) / arr.len_of(ndarray::Axis(1)) as f32)
+}
+
+pub fn ceil_div(a: usize, b: usize) -> usize {
+    (a + b - 1) / b
+}
+
+pub fn group_average_embeddings(
+    embeddings: Vec<Vec<f32>>,
+    group_size: i32,
+) -> Result<Vec<Vec<f32>>, ServiceError> {
+    let chunks = embeddings.chunks(group_size as usize);
+    chunks
+        .into_iter()
+        .map(|chunk| average_embeddings(chunk.to_vec()))
+        .collect::<Result<Vec<Vec<f32>>, ServiceError>>()
+}
+
 #[cfg(test)]
 mod test {
 
@@ -63,5 +94,18 @@ mod test {
 
         let result = average_embeddings(embeddings).unwrap();
         assert!(result == vec![2.0, 2.5, 1.0]);
+    }
+
+    #[test]
+    pub fn test_group_average_embeddings() {
+        let embeddings = vec![
+            vec![3.0, 2.5, 1.0],
+            vec![1.0, 2.5, 1.0],
+            vec![2.0, 2.5, 1.0],
+            vec![2.0, 2.5, 1.0],
+        ];
+        let result = group_average_embeddings(embeddings, 2).unwrap();
+
+        assert!(result == vec![vec![2.0, 2.5, 1.0], vec![2.0, 2.5, 1.0]]);
     }
 }
