@@ -19,7 +19,6 @@ use super::auth_handler::AuthRequired;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GroupDocumentRequest {
     pub doc_group_size: i32,
-    pub story_id: i64,
 }
 
 pub async fn create_document_group(
@@ -49,10 +48,10 @@ pub enum IndexDocumentGroupRequest {
 
 pub async fn index_docuemnt_group(
     req: web::Json<IndexDocumentGroupRequest>,
-    pool: Pool<Postgres>,
+    pool: web::Data<Pool<Postgres>>,
     _: AuthRequired,
 ) -> Result<HttpResponse, ServiceError> {
-    create_doc_group_embedding(req.into_inner(), pool)
+    create_doc_group_embedding(req.into_inner(), pool.get_ref().clone())
         .await
         .map(|_| HttpResponse::NoContent().into())
 }
