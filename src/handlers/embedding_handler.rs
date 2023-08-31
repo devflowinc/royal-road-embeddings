@@ -17,7 +17,7 @@ use super::auth_handler::AuthRequired;
 pub struct IndexDocumentRequest {
     pub doc_html: String,
     pub story_id: i64,
-    pub doc_num: i64,
+    pub index: i64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -41,7 +41,7 @@ pub async fn index_document(
         None,
         document.doc_html.clone(),
         document.story_id,
-        document.doc_num,
+        document.index,
         None,
         None,
         None,

@@ -19,16 +19,16 @@ pub async fn upsert_doc_embedding_pg_query(
     doc_embedding: DocEmbedding,
     pool: Pool<Postgres>,
 ) -> Result<Option<uuid::Uuid>, ServiceError> {
-    // select qdrant_point_id from doc_embeddings where story_id = $1 and doc_num = $2
+    // select qdrant_point_id from doc_embeddings where story_id = $1 and index = $2
     let qdrant_point_id: Option<QdrantPointIdContainer> = sqlx::query_as!(
         QdrantPointIdContainer,
         r#"
         SELECT qdrant_point_id
         FROM doc_embeddings
-        WHERE story_id = $1 AND doc_num = $2
+        WHERE story_id = $1 AND index = $2
         "#,
         doc_embedding.story_id,
-        doc_embedding.doc_num,
+        doc_embedding.index,
     )
     .fetch_optional(&pool)
     .await
@@ -36,20 +36,20 @@ pub async fn upsert_doc_embedding_pg_query(
 
     sqlx::query!(
         r#"
-        INSERT INTO doc_embeddings (id, doc_html, story_id, doc_num, qdrant_point_id, created_at, updated_at)
+        INSERT INTO doc_embeddings (id, doc_html, story_id, index, qdrant_point_id, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (story_id, doc_num) DO UPDATE
+        ON CONFLICT (story_id, index) DO UPDATE
         SET
             doc_html = EXCLUDED.doc_html,
             story_id = EXCLUDED.story_id,
-            doc_num = EXCLUDED.doc_num,
+            index = EXCLUDED.index,
             qdrant_point_id = EXCLUDED.qdrant_point_id,
             updated_at = EXCLUDED.updated_at
         "#,
         doc_embedding.id,
         doc_embedding.doc_html,
         doc_embedding.story_id,
-        doc_embedding.doc_num,
+        doc_embedding.index,
         doc_embedding.qdrant_point_id,
         doc_embedding.created_at,
         doc_embedding.updated_at,
@@ -95,7 +95,7 @@ pub async fn create_doc_group_embedding(
             r#"
                 SELECT qdrant_point_id
                 FROM doc_embeddings
-                ORDER BY doc_num ASC
+                ORDER BY index ASC
                 "#,
         )
         .fetch_all(&pool)
@@ -107,7 +107,7 @@ pub async fn create_doc_group_embedding(
                 SELECT qdrant_point_id
                 FROM doc_embeddings
                 WHERE story_id = ANY($1)
-                ORDER BY doc_num ASC
+                ORDER BY index ASC
                 "#,
             &story_ids[..]
         )
