@@ -33,6 +33,7 @@ pub async fn get_docs_by_point_id(
             )
             .fetch_all(&pool)
             .await
+            
             .map_err(ServiceError::PgSearchError)?;
 
             Ok(embeds

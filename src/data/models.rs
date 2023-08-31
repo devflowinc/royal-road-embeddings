@@ -7,7 +7,7 @@ pub struct DocEmbedding {
     pub id: uuid::Uuid,
     pub doc_html: String,
     pub story_id: i64,
-    pub doc_num: i64,
+    pub index: i64,
     pub qdrant_point_id: uuid::Uuid,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
@@ -18,7 +18,7 @@ impl DocEmbedding {
         id: Option<uuid::Uuid>,
         doc_html: String,
         story_id: i64,
-        doc_num: i64,
+        index: i64,
         qdrant_point_id: Option<uuid::Uuid>,
         created_at: Option<chrono::NaiveDateTime>,
         updated_at: Option<chrono::NaiveDateTime>,
@@ -27,7 +27,7 @@ impl DocEmbedding {
             id: id.unwrap_or(uuid::Uuid::new_v4()),
             doc_html,
             story_id,
-            doc_num,
+            index,
             qdrant_point_id: qdrant_point_id.unwrap_or(uuid::Uuid::new_v4()),
             created_at: created_at.unwrap_or(chrono::Utc::now().naive_utc()),
             updated_at: updated_at.unwrap_or(chrono::Utc::now().naive_utc()),
@@ -37,14 +37,14 @@ impl DocEmbedding {
 
 pub struct DocEmbeddingQdrantPayload {
     pub story_id: i64,
-    pub doc_num: i64,
+    pub index: i64,
 }
 
 impl From<DocEmbedding> for DocEmbeddingQdrantPayload {
     fn from(doc_embedding: DocEmbedding) -> Self {
         Self {
             story_id: doc_embedding.story_id,
-            doc_num: doc_embedding.doc_num,
+            index: doc_embedding.index,
         }
     }
 }
@@ -53,7 +53,7 @@ impl From<DocEmbeddingQdrantPayload> for HashMap<String, qdrant_client::prelude:
     fn from(val: DocEmbeddingQdrantPayload) -> Self {
         let mut map = HashMap::new();
         map.insert("story_id".to_string(), val.story_id.to_string().into());
-        map.insert("doc_num".to_string(), val.doc_num.to_string().into());
+        map.insert("index".to_string(), val.index.to_string().into());
         map
     }
 }
@@ -67,8 +67,8 @@ impl From<HashMap<String, qdrant_client::prelude::Value>> for DocEmbeddingQdrant
                 .to_string()
                 .parse::<i64>()
                 .unwrap_or(0),
-            doc_num: value
-                .get("doc_num")
+            index: value
+                .get("index")
                 .unwrap_or(&qdrant_client::qdrant::Value { kind: Option::None })
                 .to_string()
                 .parse::<i64>()

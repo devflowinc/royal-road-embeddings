@@ -18,7 +18,7 @@ async fn test_index_document() {
     let document = IndexDocumentRequest {
         doc_html: "html".to_string(),
         story_id: 5,
-        doc_num: 5,
+        index: 5,
     };
 
     let response = req

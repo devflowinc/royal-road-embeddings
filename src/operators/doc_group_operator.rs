@@ -12,7 +12,7 @@ pub async fn get_doc_group_qdrant_ids_pg_query(
         r#"
         SELECT qdrant_point_id
         FROM doc_embeddings
-        WHERE story_id = ANY($1) AND doc_num = $2
+        WHERE story_id = ANY($1) AND index = $2
         "#,
         story_ids.as_slice(),
         doc_group_size as i64,
