@@ -9,13 +9,14 @@ use crate::{
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct SearchRequest {
+pub struct SemanticSearchRequest {
     pub doc_group_size: Option<i32>,
     pub page: u64,
     pub query: String,
 }
+
 pub async fn semantic_search(
-    group_document_request: web::Json<SearchRequest>,
+    group_document_request: web::Json<SemanticSearchRequest>,
     pool: web::Data<Pool<Postgres>>,
 ) -> Result<HttpResponse, ServiceError> {
     /*
@@ -41,4 +42,18 @@ pub async fn semantic_search(
     )
     .await?;
     Ok(HttpResponse::Ok().json(results))
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SimilarityToSingleVectorRequest {
+    pub doc_group_size: Option<i32>,
+    pub index: u64,
+    pub story_id: i64,
+}
+
+pub async fn similarity_to_single_vector(
+    similarity_to_single_vector_request: web::Json<SimilarityToSingleVectorRequest>,
+    pool: web::Data<Pool<Postgres>>,
+) -> Result<HttpResponse, ServiceError> {
+    Ok(HttpResponse::Ok().into())
 }
