@@ -160,7 +160,7 @@ pub async fn create_doc_group_embedding(
                     None,
                     story_id,
                     doc_group_size,
-                    index,
+                    index as i32,
                     Some(qdrant_point_id),
                     None,
                     None,

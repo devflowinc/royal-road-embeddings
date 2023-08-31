@@ -102,7 +102,7 @@ pub async fn insert_doc_group_embedding_qdrant_query(
             payload: DocGroupEmbeddingQdrantPayload {
                 story_id,
                 doc_group_size,
-                index: idx,
+                index: idx as i32,
             }
             .into(),
         })
