@@ -1,5 +1,5 @@
 use qdrant_client::qdrant;
-use sqlx::{Pool, Postgres, QueryBuilder};
+use sqlx::{Pool, Postgres};
 
 use crate::data::models::DocGroupEmbedding;
 use crate::{
@@ -147,9 +147,7 @@ pub async fn create_doc_group_embedding(
 
             let doc_groups = qdrant_points_added.into_iter().flat_map(|point_struct| {
                 let qdrant_point_id: uuid::Uuid = match point_struct.id?.point_id_options? {
-                    qdrant::point_id::PointIdOptions::Uuid(id) => {
-                        Some(id.to_string().parse().unwrap())?
-                    }
+                    qdrant::point_id::PointIdOptions::Uuid(id) => Some(id.parse().unwrap())?,
                     qdrant::point_id::PointIdOptions::Num(_) => {
                         unreachable!("This should not happen")
                     }
