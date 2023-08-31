@@ -1,9 +1,10 @@
 use qdrant_client::{
     prelude::{QdrantClient, QdrantClientConfig},
     qdrant::{
-        self, point_id::PointIdOptions, with_payload_selector::SelectorOptions, CreateCollection,
-        Distance, HasIdCondition, PointId, PointStruct, RecommendPoints, SearchPoints,
-        VectorParams, VectorsConfig, WithPayloadSelector,
+        self, point_id::PointIdOptions, r#match::MatchValue,
+        with_payload_selector::SelectorOptions, CreateCollection, Distance, FieldCondition,
+        HasIdCondition, Match, PointId, PointStruct, RecommendPoints, SearchPoints, VectorParams,
+        VectorsConfig, WithPayloadSelector,
     },
 };
 
@@ -160,7 +161,7 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
     Ok(())
 }
 
-pub async fn reccomend_group_doc_embeddings_qdrant_query(
+pub async fn recommend_group_doc_embeddings_qdrant_query(
     positive_qdrant_ids: Vec<uuid::Uuid>,
     doc_group_size: i32,
     limit: Option<u64>,
@@ -212,6 +213,7 @@ pub struct QdrantPoints {
     pub point_id: uuid::Uuid,
     pub payload: DocEmbeddingQdrantPayload,
 }
+
 pub async fn search_qdrant_query(
     embedding: Vec<f32>,
     page: u64,
@@ -249,4 +251,72 @@ pub async fn search_qdrant_query(
         .collect();
 
     Ok(point_ids)
+}
+
+pub async fn similarity_top_filtered_point(
+    query_embedding: Vec<f32>,
+    story_id: i64,
+    index: i64,
+    doc_group_size: Option<i32>,
+) -> Result<Option<f32>, ServiceError> {
+    let mut collection_name = "doc_embeddings".to_owned();
+
+    if let Some(doc_group_size) = doc_group_size {
+        if doc_group_size > 1 {
+            collection_name = format!("doc_group_{}", doc_group_size);
+        }
+    }
+
+    let qdrant_filter = qdrant::Filter {
+        should: vec![
+            FieldCondition {
+                key: "story_id".to_owned(),
+                r#match: Some(Match {
+                    match_value: Some(MatchValue::Integer(story_id)),
+                }),
+                range: None,
+                geo_bounding_box: None,
+                geo_radius: None,
+                values_count: None,
+            }
+            .into(),
+            FieldCondition {
+                key: "index".to_owned(),
+                r#match: Some(Match {
+                    match_value: Some(MatchValue::Integer(index)),
+                }),
+                range: None,
+                geo_bounding_box: None,
+                geo_radius: None,
+                values_count: None,
+            }
+            .into(),
+        ],
+        ..Default::default()
+    };
+
+    let qdrant_client = get_qdrant_connection().await?;
+
+    let search_result: Option<f32> = qdrant_client
+        .search_points(&SearchPoints {
+            collection_name,
+            vector: query_embedding,
+            limit: 1,
+            offset: None,
+            with_payload: None,
+            filter: Some(qdrant_filter),
+            ..Default::default()
+        })
+        .await
+        .map_err(ServiceError::QdrantSearchError)
+        .map(|res| {
+            res.result
+                .into_iter()
+                .map(|point| point.score)
+                .collect::<Vec<f32>>()
+                .first()
+                .cloned()
+        })?;
+
+    Ok(search_result)
 }

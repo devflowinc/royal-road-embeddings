@@ -29,6 +29,8 @@ pub enum ServiceError {
     PgSearchError(sqlx::Error),
     UpsertDocGroupEmbeddingQdrantError(anyhow::Error),
     InsertDocGroupEmbeddingPgError(sqlx::Error),
+    QdrantSimilarityTopFilteredPointError(anyhow::Error),
+    MatchingRecordNotFound,
 }
 
 impl ResponseError for ServiceError {
@@ -140,6 +142,18 @@ impl ResponseError for ServiceError {
                     message: "Error inserting DocGroupEmbedding to Postgres.".to_string(),
                     error_code: "0018".to_string(),
                 }),
+            ServiceError::QdrantSimilarityTopFilteredPointError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error getting similarity to single vector from Qdrant.".to_string(),
+                    error_code: "0018".to_string(),
+                })
+            }
+            ServiceError::MatchingRecordNotFound => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Matching record not found.".to_string(),
+                    error_code: "0019".to_string(),
+                })
+            }
         }
     }
 }

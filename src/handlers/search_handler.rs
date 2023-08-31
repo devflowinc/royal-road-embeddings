@@ -1,4 +1,5 @@
 use actix_web::{web, HttpResponse};
+use serde_json::json;
 use sqlx::{Pool, Postgres};
 
 use crate::{
@@ -7,6 +8,8 @@ use crate::{
 };
 
 use serde::{Deserialize, Serialize};
+
+use super::auth_handler::AuthRequired;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SemanticSearchRequest {
@@ -46,14 +49,30 @@ pub async fn semantic_search(
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SimilarityToSingleVectorRequest {
+    pub query: String,
     pub doc_group_size: Option<i32>,
-    pub index: u64,
+    pub index: i64,
     pub story_id: i64,
 }
 
 pub async fn similarity_to_single_vector(
     similarity_to_single_vector_request: web::Json<SimilarityToSingleVectorRequest>,
-    pool: web::Data<Pool<Postgres>>,
+    _auth_required: AuthRequired,
 ) -> Result<HttpResponse, ServiceError> {
-    Ok(HttpResponse::Ok().into())
+    let query_embedding =
+        embedding_operator::create_embedding(similarity_to_single_vector_request.query.clone())
+            .await?;
+
+    let similarity = qdrant_operator::similarity_top_filtered_point(
+        query_embedding,
+        similarity_to_single_vector_request.story_id,
+        similarity_to_single_vector_request.index,
+        similarity_to_single_vector_request.doc_group_size,
+    )
+    .await?;
+
+    match similarity {
+        Some(similarity) => Ok(HttpResponse::Ok().json(json!({ "similarity": similarity }))),
+        None => Err(ServiceError::MatchingRecordNotFound),
+    }
 }

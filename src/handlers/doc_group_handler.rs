@@ -9,7 +9,7 @@ use crate::{
         doc_embedding_operator::create_doc_group_embedding,
         doc_group_operator::get_doc_group_qdrant_ids_pg_query,
         qdrant_operator::{
-            create_doc_group_collection_qdrant_query, reccomend_group_doc_embeddings_qdrant_query,
+            create_doc_group_collection_qdrant_query, recommend_group_doc_embeddings_qdrant_query,
         },
     },
 };
@@ -88,7 +88,7 @@ pub async fn recommend_document_group(
     )
     .await?;
 
-    let recommended_story_ids = reccomend_group_doc_embeddings_qdrant_query(
+    let recommended_story_ids = recommend_group_doc_embeddings_qdrant_query(
         positive_qdrant_ids,
         recommend_document_request.doc_group_size,
         recommend_document_request.limit,
