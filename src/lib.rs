@@ -83,6 +83,15 @@ pub async fn main() -> std::io::Result<()> {
                         "/index_document",
                         web::post().to(handlers::embedding_handler::index_document),
                     )
+                    .service(
+                        web::resource("/document_group")
+                            .route(
+                                web::post().to(handlers::doc_group_handler::create_document_group),
+                            )
+                            .route(
+                                web::put().to(handlers::doc_group_handler::index_docuemnt_group),
+                            ),
+                    )
                     .route(
                         "/search",
                         web::post().to(handlers::search_handler::semantic_search),

@@ -58,6 +58,7 @@ pub async fn get_doc_embeddings_qdrant_query(
 ) -> Result<Vec<Vec<f32>>, ServiceError> {
     let qdrant_client = get_qdrant_connection().await?;
     let scroll_points = qdrant::ScrollPoints {
+        collection_name: "doc_embeddings".into(),
         filter: Some(qdrant::Filter {
             should: vec![HasIdCondition {
                 has_id: qdrant_points
@@ -70,6 +71,7 @@ pub async fn get_doc_embeddings_qdrant_query(
         }),
         limit: None,
         with_vectors: Some(true.into()),
+        with_payload: Some(false.into()),
         ..Default::default()
     };
 
