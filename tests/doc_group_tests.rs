@@ -18,7 +18,7 @@ async fn add_document(content: String, story_id: i64, index: i64) {
     let document = IndexDocumentRequest {
         doc_html: content,
         story_id,
-        doc_num: index
+        index,
     };
 
     let response = req
