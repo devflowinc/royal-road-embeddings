@@ -61,7 +61,7 @@ pub async fn upsert_doc_embedding_pg_query(
     Ok(qdrant_point_id.map(|qdrant_point_id_container| qdrant_point_id_container.qdrant_point_id))
 }
 
-pub async fn insert_doc_group_embedding_pg_query(
+pub async fn upsert_doc_group_embedding_pg_query(
     doc_groups: impl Iterator<Item = DocGroupEmbedding>,
     pool: Pool<Postgres>,
 ) -> Result<(), ServiceError> {
@@ -71,6 +71,10 @@ pub async fn insert_doc_group_embedding_pg_query(
             r#"
             INSERT INTO doc_group_embeddings (id, story_id, doc_group_size, index, qdrant_point_id, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (story_id, doc_group_size, index) DO UPDATE
+            SET
+                qdrant_point_id = EXCLUDED.qdrant_point_id,
+                updated_at = EXCLUDED.updated_at
             "#,
             g.id,
             g.story_id,
@@ -82,7 +86,7 @@ pub async fn insert_doc_group_embedding_pg_query(
         ).execute(&pool).await.map_err(ServiceError::InsertDocGroupEmbeddingPgError)?;
     }
 
-    Err(ServiceError::NotImplemented)
+    Ok(())
 }
 
 pub async fn create_doc_group_embedding(
@@ -167,7 +171,7 @@ pub async fn create_doc_group_embedding(
                 ))
             });
 
-            insert_doc_group_embedding_pg_query(doc_groups, pool).await?;
+            upsert_doc_group_embedding_pg_query(doc_groups, pool).await?;
 
             Ok(())
         }
