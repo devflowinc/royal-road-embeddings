@@ -83,9 +83,11 @@ pub async fn get_doc_embeddings_qdrant_query(
     Ok(scroll_response
         .result
         .into_iter()
-        .flat_map(|res| match res.vectors?.vectors_options? {
-            qdrant::vectors::VectorsOptions::Vector(vector) => Some(vector.data),
-            _ => None,
+        .flat_map(|res| {
+            match res.vectors?.vectors_options? {
+                    qdrant::vectors::VectorsOptions::Vector(vector) => Some(vector.data),
+                    _ => None,
+                }
         })
         .collect::<Vec<Vec<f32>>>())
 }
@@ -238,7 +240,6 @@ pub async fn search_qdrant_query(
         .await
         .map_err(ServiceError::QdrantSearchError)?;
 
-    log::error!("{}", format!("Qdrant search results: {:?}", data));
     let point_ids: Vec<QdrantPoints> = data
         .result
         .iter()

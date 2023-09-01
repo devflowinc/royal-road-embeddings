@@ -137,7 +137,7 @@ impl From<DocGroupEmbeddingQdrantPayload> for HashMap<String, qdrant_client::pre
         );
         map.insert(
             "index".to_string(),
-            doc_group_embedding.index.to_string().into(),
+            (doc_group_embedding.index as i64).into(),
         );
         map
     }
