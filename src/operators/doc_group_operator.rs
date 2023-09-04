@@ -11,7 +11,7 @@ pub async fn get_doc_group_qdrant_ids_pg_query(
         QdrantPointIdContainer,
         r#"
         SELECT qdrant_point_id
-        FROM doc_embeddings
+        FROM doc_group_embeddings
         WHERE story_id = ANY($1) AND index = $2
         "#,
         story_ids.as_slice(),
@@ -25,4 +25,26 @@ pub async fn get_doc_group_qdrant_ids_pg_query(
     .collect::<Vec<uuid::Uuid>>();
 
     Ok(qdrant_point_ids)
+}
+
+pub async fn get_unique_doc_group_sizes(
+    story_ids: Vec<i64>,
+    pool: Pool<Postgres>,
+) -> Result<Vec<i32>, ServiceError> {
+    let unique_doc_group_sizes = sqlx::query!(
+        r#"
+        SELECT DISTINCT doc_group_size
+        FROM doc_group_embeddings
+        WHERE story_id = ANY($1)
+        "#,
+        story_ids.as_slice(),
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(ServiceError::SelectUniqueDocGroupSizesPgError)?
+    .into_iter()
+    .map(|doc_group_size_container| doc_group_size_container.doc_group_size)
+    .collect::<Vec<i32>>();
+
+    Ok(unique_doc_group_sizes)
 }

@@ -31,6 +31,7 @@ pub enum ServiceError {
     InsertDocGroupEmbeddingPgError(sqlx::Error),
     QdrantSimilarityTopFilteredPointError(anyhow::Error),
     MatchingRecordNotFound,
+    SelectUniqueDocGroupSizesPgError(sqlx::Error),
 }
 
 impl ResponseError for ServiceError {
@@ -152,6 +153,12 @@ impl ResponseError for ServiceError {
                 HttpResponse::InternalServerError().json(ErrorResponse {
                     message: "Matching record not found.".to_string(),
                     error_code: "0019".to_string(),
+                })
+            }
+            ServiceError::SelectUniqueDocGroupSizesPgError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error selecting unique DocGroup sizes from Postgres.".to_string(),
+                    error_code: "0020".to_string(),
                 })
             }
         }
