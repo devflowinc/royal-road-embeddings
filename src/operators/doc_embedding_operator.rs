@@ -7,6 +7,7 @@ use crate::{
     handlers::doc_group_handler::IndexDocumentGroupRequest,
 };
 
+use super::doc_group_embedding_operator::upsert_doc_group_embedding_pg_query;
 use super::embedding_operator::group_average_embeddings;
 use super::qdrant_operator::get_doc_embeddings_qdrant_query;
 use super::qdrant_operator::insert_doc_group_embedding_qdrant_query;
@@ -59,34 +60,6 @@ pub async fn upsert_doc_embedding_pg_query(
     .map_err(ServiceError::UpsertDocEmbeddingPgError)?;
 
     Ok(qdrant_point_id.map(|qdrant_point_id_container| qdrant_point_id_container.qdrant_point_id))
-}
-
-pub async fn upsert_doc_group_embedding_pg_query(
-    doc_groups: impl Iterator<Item = DocGroupEmbedding>,
-    pool: Pool<Postgres>,
-) -> Result<(), ServiceError> {
-    // TODO make this into a bulk query
-    for g in doc_groups {
-        sqlx::query!(
-            r#"
-            INSERT INTO doc_group_embeddings (id, story_id, doc_group_size, index, qdrant_point_id, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (story_id, doc_group_size, index) DO UPDATE
-            SET
-                qdrant_point_id = EXCLUDED.qdrant_point_id,
-                updated_at = EXCLUDED.updated_at
-            "#,
-            g.id,
-            g.story_id,
-            g.doc_group_size,
-            g.index as i32,
-            g.qdrant_point_id,
-            g.created_at,
-            g.updated_at,
-        ).execute(&pool).await.map_err(ServiceError::InsertDocGroupEmbeddingPgError)?;
-    }
-
-    Ok(())
 }
 
 pub async fn create_doc_group_embedding(
