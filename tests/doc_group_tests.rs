@@ -1,7 +1,10 @@
 use actix_rt;
 use royal_road_embeddings::{
     errors::ErrorResponse,
-    handlers::{doc_group_handler::{GroupDocumentRequest, IndexDocumentGroupRequest}, embedding_handler::{IndexDocumentRequest, IndexDocumentResponse}},
+    handlers::{
+        doc_group_handler::{GroupDocumentRequest, IndexDocumentGroupRequest},
+        embedding_handler::{IndexDocumentRequest, IndexDocumentResponse},
+    },
 };
 
 use either::Either;
@@ -18,7 +21,7 @@ async fn add_document(content: String, story_id: i64, index: i64) {
     let document = IndexDocumentRequest {
         doc_html: content,
         story_id,
-        doc_num: index
+        index,
     };
 
     let response = req

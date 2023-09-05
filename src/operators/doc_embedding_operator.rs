@@ -122,9 +122,9 @@ pub async fn create_doc_group_embedding(
             QdrantPointIdContainer,
             r#"
 	        SELECT qdrant_point_id
-		FROM doc_embeddings
-		WHERE story_id = $1
-	    "#,
+            FROM doc_embeddings
+            WHERE story_id = $1
+            "#,
             story_id
         )
         .fetch_all(&pool)
