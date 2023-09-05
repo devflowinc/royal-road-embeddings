@@ -7,7 +7,7 @@ use crate::{
     errors::ServiceError,
     operators::{
         doc_embedding_operator::create_doc_group_embedding,
-        doc_group_operator::get_doc_group_qdrant_ids_pg_query,
+        doc_group_embedding_operator::get_doc_group_qdrant_ids_pg_query,
         qdrant_operator::{
             create_doc_group_collection_qdrant_query, recommend_group_doc_embeddings_qdrant_query,
         },
@@ -85,7 +85,10 @@ pub async fn recommend_document_group(
         recommend_document_request.doc_group_size,
         pool.get_ref().clone(),
     )
-    .await?;
+    .await?
+    .into_iter()
+    .map(|doc_group_qdrant_id| doc_group_qdrant_id.qdrant_point_id)
+    .collect::<Vec<uuid::Uuid>>();
 
     let recommended_story_ids = recommend_group_doc_embeddings_qdrant_query(
         positive_qdrant_ids,
