@@ -148,11 +148,13 @@ pub async fn re_index_appropriate_doc_groups(
     single_chapter_index: i32,
     pool: Pool<Postgres>,
 ) -> Result<(), ServiceError> {
+    // get all of the doc group sizes for the given story_id
     let mut group_to_reaverage = HashMap::new();
     let unique_doc_group_sizes =
         get_unique_doc_group_sizes(vec![story_id.clone()], pool.clone()).await?;
     let unique_doc_group_sizes1 = unique_doc_group_sizes.clone();
 
+    // from the single_chapter_index and unique_doc_group_sizes, determine the indices of the groups which need to be re-averaged
     for doc_group_size in unique_doc_group_sizes {
         let group_index = single_chapter_index / doc_group_size;
 
@@ -161,8 +163,8 @@ pub async fn re_index_appropriate_doc_groups(
     let group_to_reaverage1 = group_to_reaverage.clone();
     let group_to_reaverage2 = group_to_reaverage.clone();
 
+    // get all of the single chapter vectors for each of the the group sizes and indices determined above
     let mut vectors_to_average = HashMap::new();
-
     for (doc_group_size, group_index) in group_to_reaverage {
         let vectors = get_single_vectors_to_re_average(
             story_id.clone(),
@@ -174,7 +176,17 @@ pub async fn re_index_appropriate_doc_groups(
 
         vectors_to_average.insert(doc_group_size, vectors);
     }
+    let mut group_average_vectors = HashMap::new();
 
+    // average the vectors for each of the group sizes and indices determined above
+    for (doc_group_size, vectors) in vectors_to_average {
+        let average_vector = average_embeddings(vectors)?;
+
+        group_average_vectors.insert(doc_group_size, average_vector);
+    }
+    let group_average_vectors1 = group_average_vectors.clone();
+
+    // get the existing qdrant_point_ids for each of the group sizes and indices determined above or none if they don't exist
     let mut group_qdrant_point_ids = HashMap::new();
     for (doc_group_size, group_index) in group_to_reaverage1 {
         let doc_group_qdrant_point_ids = get_indexed_doc_group_qdrant_ids_pg_query(
@@ -194,16 +206,8 @@ pub async fn re_index_appropriate_doc_groups(
     }
     let group_qdrant_point_ids1 = group_qdrant_point_ids.clone();
 
-    let mut group_average_vectors = HashMap::new();
-    for (doc_group_size, vectors) in vectors_to_average {
-        let average_vector = average_embeddings(vectors)?;
-
-        group_average_vectors.insert(doc_group_size, average_vector);
-    }
-    let group_average_vectors1 = group_average_vectors.clone();
-
+    // create the qdrant points to upsert
     let mut qdrant_points_to_upsert: Vec<PointStruct> = Vec::new();
-
     for (doc_group_size, average_vector) in group_average_vectors {
         let qdrant_point_id = match group_qdrant_point_ids.get(&doc_group_size) {
             Some(qdrant_point_id) => match qdrant_point_id {
@@ -227,8 +231,8 @@ pub async fn re_index_appropriate_doc_groups(
         qdrant_points_to_upsert.push(qdrant_point);
     }
 
+    // upsert the qdrant points for each of the group sizes determined above
     let qdrant_client = get_qdrant_connection().await?;
-
     for unique_size in unique_doc_group_sizes1 {
         let points_of_group_size = qdrant_points_to_upsert
             .iter()
@@ -254,6 +258,7 @@ pub async fn re_index_appropriate_doc_groups(
             .map_err(ServiceError::UpsertDocGroupEmbeddingQdrantError)?;
     }
 
+    // create the doc group embeddings to upsert
     let doc_groups_to_upsert = group_average_vectors1
         .into_iter()
         .map(|(doc_group_size, _)| {
@@ -269,6 +274,7 @@ pub async fn re_index_appropriate_doc_groups(
         })
         .collect::<Vec<DocGroupEmbedding>>();
 
+    // upsert the doc group embeddings created above
     upsert_doc_group_embedding_pg_query(doc_groups_to_upsert.into_iter(), pool).await?;
 
     Ok(())
