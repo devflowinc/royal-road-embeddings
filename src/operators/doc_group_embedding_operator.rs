@@ -25,8 +25,8 @@ pub async fn get_single_vectors_to_re_average(
         WHERE story_id = $1 AND index >= $2 AND index < $3
         "#,
         story_id,
-        group_index as i64 * doc_group_size as i64,
-        group_index as i64 * doc_group_size as i64 + doc_group_size as i64 - 1,
+        group_index * doc_group_size,
+        group_index * doc_group_size + doc_group_size - 1,
     )
     .fetch_all(&pool)
     .await

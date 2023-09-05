@@ -15,7 +15,8 @@ struct IndexDocumentReturn {
     #[serde(with = "either::serde_untagged")]
     response: Either<IndexDocumentResponse, ErrorResponse>,
 }
-async fn add_document(content: String, story_id: i64, index: i64) {
+
+async fn add_document(content: String, story_id: i64, index: i32) {
     let key = "key";
     let req = reqwest::Client::new();
     let document = IndexDocumentRequest {
