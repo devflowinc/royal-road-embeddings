@@ -7,7 +7,7 @@ pub struct DocEmbedding {
     pub id: uuid::Uuid,
     pub doc_html: String,
     pub story_id: i64,
-    pub index: i64,
+    pub index: i32,
     pub qdrant_point_id: uuid::Uuid,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
@@ -18,7 +18,7 @@ impl DocEmbedding {
         id: Option<uuid::Uuid>,
         doc_html: String,
         story_id: i64,
-        index: i64,
+        index: i32,
         qdrant_point_id: Option<uuid::Uuid>,
         created_at: Option<chrono::NaiveDateTime>,
         updated_at: Option<chrono::NaiveDateTime>,
@@ -37,7 +37,7 @@ impl DocEmbedding {
 
 pub struct DocEmbeddingQdrantPayload {
     pub story_id: i64,
-    pub index: i64,
+    pub index: i32,
 }
 
 impl From<DocEmbedding> for DocEmbeddingQdrantPayload {
@@ -71,7 +71,7 @@ impl From<HashMap<String, qdrant_client::prelude::Value>> for DocEmbeddingQdrant
                 .get("index")
                 .unwrap_or(&qdrant_client::qdrant::Value { kind: Option::None })
                 .to_string()
-                .parse::<i64>()
+                .parse::<i32>()
                 .unwrap_or(0),
         }
     }
