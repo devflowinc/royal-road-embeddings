@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT qdrant_point_id, doc_group_size, index\n        FROM doc_group_embeddings\n        WHERE story_id = ANY($1) AND doc_group_size = $2 AND index = ANY($3)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "qdrant_point_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "doc_group_size",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "index",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int4",
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "3abb3a995d30f01d8b1a673f80e006d6dd1b7f3e17fe0f75b52716b0b11be155"
+}
