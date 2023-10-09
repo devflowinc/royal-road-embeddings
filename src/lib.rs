@@ -76,6 +76,10 @@ pub async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/api")
                     .route(
+                        "/healthcheck",
+                        web::get().to(handlers::healthcheck),
+                    )
+                    .route(
                         "/check_key",
                         web::get().to(handlers::auth_handler::check_key),
                     )
