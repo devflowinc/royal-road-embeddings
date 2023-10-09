@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT qdrant_point_id\n                FROM doc_embeddings\n                ORDER BY index ASC\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "qdrant_point_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "12e8e72a21128f78174fb72fd171e73ed763411a7e16ea768f549d35a67252dc"
+}

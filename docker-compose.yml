@@ -2,6 +2,8 @@ version: "3"
 
 services:
   qdrant-database:
+    networks:
+      - app-network
     image: qdrant/qdrant:v1.3.2
     environment:
       - QDRANT__SERVICE__API_KEY=qdrant_pass
@@ -10,7 +12,10 @@ services:
       - 6334:6334
     volumes:
       - qdrant_data:/qdrant/storage
+
   pg-db:
+    networks:
+      - app-network
     image: postgres
     restart: always
     environment:
@@ -21,11 +26,32 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
   embedding-server:
-    build:
-      context: ./python_src
+    networks:
+      - app-network
+    build: ./python_src
     ports:
       - "5000:5000"
+
+  royal-road-server:
+    networks:
+      - app-network
+    image: arguflow/royal-road
+    build: ./
+    ports:
+      - "8090:8090"
+    environment:
+      - API_KEY=${API_KEY}
+      - EMBEDDING_SERVER_CALL=${EMBEDDING_SERVER_CALL}
+      - DATABASE_URL=${DATABASE_URL}
+      - QDRANT_URL=${QDRANT_URL}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+
+networks:
+  app-network:
+    driver: bridge
+
 volumes:
   qdrant_data:
   pgdata:

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\t        SELECT qdrant_point_id\n            FROM doc_embeddings\n            WHERE story_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "qdrant_point_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4d223cce9b92a5f574de7db3f193b3e7aac1eb9f2cfd0c09911827d46599ca61"
+}
