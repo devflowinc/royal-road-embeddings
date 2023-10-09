@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use ndarray::Array2;
 
 use crate::errors::ServiceError;
+use async_openai::config::OpenAIConfig;
+use async_openai::types::CreateEmbeddingRequest;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CustomServerData {
@@ -18,6 +20,36 @@ pub async fn create_embedding(message: String) -> Result<Vec<f32>, ServiceError>
     get_average_embedding(vec![message]).await
 }
 
+#[cfg(not(feature = "embedding_server"))]
+pub async fn get_openai_client() -> async_openai::Client<OpenAIConfig> {
+    let open_ai_api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY should be set");
+    let config = OpenAIConfig::new().with_api_key(open_ai_api_key);
+
+    async_openai::Client::with_config(config)
+}
+
+#[cfg(not(feature = "embedding_server"))]
+pub async fn get_average_embedding(chunks: Vec<String>) -> Result<Vec<f32>, ServiceError> {
+    let client = get_openai_client().await;
+
+    let embeddings = client
+        .embeddings()
+        .create(CreateEmbeddingRequest {
+            input: chunks.into(),
+            model: "text-embedding-ada-002".to_string(),
+            user: None,
+        })
+        .await
+        .map_err(ServiceError::CreateEmbeddingServerError)?
+        .data
+        .into_iter()
+        .map(|d| d.embedding)
+        .collect::<Vec<Vec<f32>>>();
+
+    average_embeddings(embeddings)
+}
+
+#[cfg(feature = "embedding_server")]
 pub async fn get_average_embedding(document_chunks: Vec<String>) -> Result<Vec<f32>, ServiceError> {
     let embedding_server_call =
         std::env::var("EMBEDDING_SERVER_CALL").expect("EMBEDDING_SERVER_CALL must be set");
@@ -38,6 +70,7 @@ pub async fn get_average_embedding(document_chunks: Vec<String>) -> Result<Vec<f
     Ok(resp.embeddings)
 }
 
+#[cfg(not(feature = "embedding_server"))]
 pub fn average_embeddings(embeddings: Vec<Vec<f32>>) -> Result<Vec<f32>, ServiceError> {
     let shape = (embeddings.len(), embeddings[0].len());
     let flat: Vec<f32> = embeddings.iter().flatten().cloned().collect();
@@ -47,6 +80,7 @@ pub fn average_embeddings(embeddings: Vec<Vec<f32>>) -> Result<Vec<f32>, Service
     Ok((arr.sum_axis(ndarray::Axis(0)) / (embeddings.len() as f32)).to_vec())
 }
 
+#[cfg(not(feature = "embedding_server"))]
 pub fn group_average_embeddings_better(
     embeddings: Vec<Vec<f32>>,
     group_size: i32,

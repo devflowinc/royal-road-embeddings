@@ -33,6 +33,7 @@ pub enum ServiceError {
     MatchingRecordNotFound,
     SelectUniqueDocGroupSizesPgError(sqlx::Error),
     SelectDocEmbeddingsQdrantIdsPgError(sqlx::Error),
+    CreateEmbeddingServerError(async_openai::error::OpenAIError),
 }
 
 impl ResponseError for ServiceError {
@@ -168,6 +169,11 @@ impl ResponseError for ServiceError {
                     error_code: "0021".to_string(),
                 })
             }
+            ServiceError::CreateEmbeddingServerError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error selecting DocEmbedding Qdrant IDs from Postgres.".to_string(),
+                    error_code: "0021".to_string(),
+                }),
         }
     }
 }
