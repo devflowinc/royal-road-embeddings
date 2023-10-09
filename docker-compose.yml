@@ -27,12 +27,12 @@ services:
     ports:
       - "5432:5432"
 
-  embedding-server:
-    networks:
-      - app-network
-    build: ./python_src
-    ports:
-      - "5000:5000"
+  # embedding-server:
+  #   networks:
+  #     - app-network
+  #   build: ./python_src
+  #   ports:
+  #     - "5000:5000"
 
   royal-road-server:
     networks:

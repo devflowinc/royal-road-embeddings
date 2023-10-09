@@ -73,11 +73,13 @@ impl ResponseError for ServiceError {
                     error_code: "0005".to_string(),
                 })
             }
-            ServiceError::UpsertDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
-                .json(ErrorResponse {
-                    message: "Error upserting DocEmbedding to Qdrant.".to_string(),
-                    error_code: "0006".to_string(),
-                }),
+            ServiceError::UpsertDocEmbeddingQdrantError(err) => {
+                HttpResponse::InternalServerError()
+                            .json(ErrorResponse {
+                                message: "Error upserting DocEmbedding to Qdrant.".to_string(),
+                                error_code: "0006".to_string(),
+                            })
+            },
             ServiceError::DeleteDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
                     message: "Error deleting DocEmbedding from Qdrant.".to_string(),
@@ -172,7 +174,7 @@ impl ResponseError for ServiceError {
             ServiceError::CreateEmbeddingServerError(_) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
                     message: "Error selecting DocEmbedding Qdrant IDs from Postgres.".to_string(),
-                    error_code: "0021".to_string(),
+                    error_code: "0022".to_string(),
                 }),
         }
     }
