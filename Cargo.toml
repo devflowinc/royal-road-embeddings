@@ -20,7 +20,12 @@ uuid = { version = "1.4.1", features = ["v4", "serde"] }
 sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-native-tls", "postgres", "uuid", "chrono", "json" ] }
 ndarray = "0.15.6"
 actix-rt = "2.9.0"
+async-openai = "0.14.3"
 
 [dev-dependencies]
 actix-rt = "2.9.0"
 either = { version = "1.9.0", features = ["serde"] }
+
+[features]
+default = []
+embedding-server = []
