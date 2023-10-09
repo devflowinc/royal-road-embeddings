@@ -31,7 +31,7 @@ async fn add_document(content: String, story_id: i64, index: i32) {
         .json(&document)
         .send()
         .await;
-    assert!(response.is_ok());
+
     let res = response.unwrap();
     let json = res.json::<IndexDocumentReturn>().await.unwrap();
     match json.response {
