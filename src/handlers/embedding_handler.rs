@@ -35,8 +35,7 @@ pub async fn index_document(
     let pool_inner = pool.get_ref().clone();
     let pool_inner1 = pool.get_ref().clone();
 
-    let doc_content = parse_operator::parse_html(document.doc_html.clone());
-    let doc_chunks = parse_operator::chunk_document(doc_content.clone());
+    let doc_chunks = parse_operator::chunk_document(document.doc_html.clone())?;
 
     let embedding = embedding_operator::get_average_embedding(doc_chunks).await?;
 
