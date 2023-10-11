@@ -1,6 +1,7 @@
 use actix_web::{HttpResponse, ResponseError};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
+use std::io;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
@@ -34,6 +35,8 @@ pub enum ServiceError {
     SelectUniqueDocGroupSizesPgError(sqlx::Error),
     SelectDocEmbeddingsQdrantIdsPgError(sqlx::Error),
     CreateEmbeddingServerError(async_openai::error::OpenAIError),
+    ParseDocumentCallError(io::Error),
+    ParseDocumentResponseError(serde_json::Error),
 }
 
 impl ResponseError for ServiceError {
@@ -73,7 +76,7 @@ impl ResponseError for ServiceError {
                     error_code: "0005".to_string(),
                 })
             }
-            ServiceError::UpsertDocEmbeddingQdrantError(err) => {
+            ServiceError::UpsertDocEmbeddingQdrantError(_) => {
                 HttpResponse::InternalServerError()
                             .json(ErrorResponse {
                                 message: "Error upserting DocEmbedding to Qdrant.".to_string(),
@@ -175,6 +178,16 @@ impl ResponseError for ServiceError {
                 .json(ErrorResponse {
                     message: "Error selecting DocEmbedding Qdrant IDs from Postgres.".to_string(),
                     error_code: "0022".to_string(),
+                }),
+            ServiceError::ParseDocumentCallError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error Calling Parse Document Command (likely file not found)".to_string(),
+                    error_code: "0023".to_string(),
+                }),
+            ServiceError::ParseDocumentResponseError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error Parsing Response from Parse Document Command".to_string(),
+                    error_code: "0024".to_string(),
                 }),
         }
     }

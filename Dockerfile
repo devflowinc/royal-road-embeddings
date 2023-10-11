@@ -19,11 +19,12 @@ ENV SQLX_OFFLINE true
 RUN cargo build --release
 
 # Use Ubuntu 22.04 as the base image
-FROM debian:bookworm-20230919-slim as runtime
+FROM python:3.12.0-slim-bullseye as runtime
 RUN apt-get update && apt-get install -y libpq-dev pkg-config build-essential
 
 WORKDIR /app
 COPY --from=builder /app/target/release/royal-road-embeddings /app/royal-road-embeddings
+COPY parser /app/parser
 
 COPY ./migrations/ /app/migrations
 

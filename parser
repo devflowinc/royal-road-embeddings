@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+import re
+import json
+import sys
+
+def word_count(sentence: str):
+    return len(re.split("\s+", sentence))
+
+def strip_html(document: str):
+    """
+    Strip HTML tags from a document.
+    """
+
+    return re.sub("<[^>]*>", "", document).strip()
+
+def chunk_document(document: str):
+    """
+    Chunk a document into sentences and words.
+    """
+
+    current = ""
+    chunks = []
+    for next in re.split("[.!?]", document):
+        wordboth = word_count(current) + word_count(next)
+        if wordboth < 100:
+            current = current + next
+        else:
+            chunks.append(current)
+            current = next
+
+    if current != "":
+        chunks.append(current)
+    return chunks
+
+if __name__ == "__main__":
+    line = sys.argv[1]
+    print(json.dumps({ "chunks": chunk_document(strip_html(line)) }))
