@@ -46,7 +46,7 @@ pub enum IndexDocumentGroupRequest {
     },
 }
 
-pub async fn index_docuemnt_group(
+pub async fn index_document_group(
     req: web::Json<IndexDocumentGroupRequest>,
     pool: web::Data<Pool<Postgres>>,
     _: AuthRequired,

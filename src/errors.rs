@@ -36,7 +36,8 @@ pub enum ServiceError {
     SelectDocEmbeddingsQdrantIdsPgError(sqlx::Error),
     CreateEmbeddingServerError(async_openai::error::OpenAIError),
     ParseDocumentCallError(io::Error),
-    ParseDocumentResponseError(serde_json::Error),
+    ParseDocumentResponseError,
+    ChunkDocumentError,
 }
 
 impl ResponseError for ServiceError {
@@ -76,13 +77,11 @@ impl ResponseError for ServiceError {
                     error_code: "0005".to_string(),
                 })
             }
-            ServiceError::UpsertDocEmbeddingQdrantError(_) => {
-                HttpResponse::InternalServerError()
-                            .json(ErrorResponse {
-                                message: "Error upserting DocEmbedding to Qdrant.".to_string(),
-                                error_code: "0006".to_string(),
-                            })
-            },
+            ServiceError::UpsertDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
+                .json(ErrorResponse {
+                    message: "Error upserting DocEmbedding to Qdrant.".to_string(),
+                    error_code: "0006".to_string(),
+                }),
             ServiceError::DeleteDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
                     message: "Error deleting DocEmbedding from Qdrant.".to_string(),
@@ -179,16 +178,25 @@ impl ResponseError for ServiceError {
                     message: "Error selecting DocEmbedding Qdrant IDs from Postgres.".to_string(),
                     error_code: "0022".to_string(),
                 }),
-            ServiceError::ParseDocumentCallError(_) => HttpResponse::InternalServerError()
-                .json(ErrorResponse {
-                    message: "Error Calling Parse Document Command (likely file not found)".to_string(),
+            ServiceError::ParseDocumentCallError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error Calling Parse Document Command (likely file not found)"
+                        .to_string(),
                     error_code: "0023".to_string(),
-                }),
-            ServiceError::ParseDocumentResponseError(_) => HttpResponse::InternalServerError()
-                .json(ErrorResponse {
+                })
+            }
+            ServiceError::ParseDocumentResponseError => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
                     message: "Error Parsing Response from Parse Document Command".to_string(),
                     error_code: "0024".to_string(),
-                }),
+                })
+            }
+            ServiceError::ChunkDocumentError => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error Chunking Document".to_string(),
+                    error_code: "0025".to_string(),
+                })
+            }
         }
     }
 }

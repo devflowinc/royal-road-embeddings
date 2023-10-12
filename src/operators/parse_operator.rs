@@ -1,30 +1,26 @@
 use std::process::Command;
-
-use itertools::Itertools;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::errors::ServiceError;
 
 #[derive(Debug, Deserialize, Serialize)]
-struct ParseCallReturn <> {
+struct ParseCallReturn {
     chunks: Vec<String>,
 }
 
 pub fn chunk_document(document: String) -> Result<Vec<String>, ServiceError> {
-    let output = Command::new("./parser")
-        .arg(document)
+    let output = Command::new("python")
+        .args(&["parser_1.py", &document])
         .output()
-        .map_err(ServiceError::ParseDocumentCallError)?;
+        .map_err(|_e| ServiceError::ChunkDocumentError)?;
 
-    println!("Output: {output:?}");
-    let result : ParseCallReturn = serde_json::from_slice(&output.stdout)
-        .map_err(|err| {
-            log::error!("Error while chunking document: {err:?}");
-            println!("Error while chunking document: {err:?}");
-            ServiceError::NotImplemented
-        })?;
+    let chunk_stringified_json =
+        String::from_utf8(output.stdout.clone()).map_err(|_e| ServiceError::ChunkDocumentError)?;
 
-    Ok(result.chunks.iter().map(|chunk| chunk.to_string()).collect_vec())
+    let chunk_json: ParseCallReturn = serde_json::from_str(&chunk_stringified_json)
+        .map_err(|_e| ServiceError::ParseDocumentResponseError)?;
+
+    Ok(chunk_json.chunks)
 }
 
 #[cfg(test)]
@@ -35,6 +31,6 @@ mod tests {
     pub fn test_chunk_document() {
         let result = chunk_document("I am a man. That has a Very very big plan.".to_string());
         println!("Result {result:?}");
-        assert_eq!(result.expect("Should exist").len(), 2);
+        assert_eq!(result.expect("Should exist").len(), 1);
     }
 }

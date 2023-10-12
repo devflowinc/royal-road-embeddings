@@ -3,6 +3,7 @@ import json
 import re
 import sys
 from bs4 import BeautifulSoup
+import math
 
 def remove_html_tags(input_html):
     input_html = input_html.replace('\n', ' ')
@@ -21,12 +22,21 @@ def remove_html_tags(input_html):
 def split_into_groups(sentences: list):
     groups = []
     min_group_size = 10
+
+    if len(sentences) < min_group_size:
+        chunk = ''
+        for sentence in sentences:
+            chunk += sentence
+        return [chunk]
+
     remainder = len(sentences) % min_group_size
+    group_count = len(sentences) // min_group_size
+    remainder_per_group = 1 if remainder < group_count and remainder != 0 else math.ceil(remainder / group_count)
 
     while remainder > 0:
-        groups.append(sentences[:min_group_size+1])
-        sentences = sentences[min_group_size+1:]
-        remainder -= 1
+        groups.append(sentences[:min_group_size+remainder_per_group])
+        sentences = sentences[min_group_size+remainder_per_group:]
+        remainder -= remainder_per_group
     
     while len(sentences) > 0:
         groups.append(sentences[:min_group_size])
