@@ -93,7 +93,7 @@ pub async fn main() -> std::io::Result<()> {
                                 web::post().to(handlers::doc_group_handler::create_document_group),
                             )
                             .route(
-                                web::put().to(handlers::doc_group_handler::index_docuemnt_group),
+                                web::put().to(handlers::doc_group_handler::index_document_group),
                             ),
                     )
                     .route(
