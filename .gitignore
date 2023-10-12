@@ -33,3 +33,5 @@ env/
 dist/
 build/
 *.egg-info/
+Chapters.csv
+test.json
