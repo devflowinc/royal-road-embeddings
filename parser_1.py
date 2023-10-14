@@ -64,6 +64,8 @@ def split_into_chunks(document: str):
 
 def chunk_document(document: str):
     clean_text = remove_html_tags(document)
+    if clean_text == '':
+        return []
     chunks = split_into_chunks(clean_text)
 
     return chunks

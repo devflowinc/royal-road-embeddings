@@ -27,7 +27,7 @@ pub struct IndexDocumentResponse {
     embedding: Vec<f32>,
 }
 
-pub async fn index_document(
+pub async fn embed_document(
     document: web::Json<IndexDocumentRequest>,
     pool: web::Data<Pool<Postgres>>,
     _: AuthRequired,
@@ -36,6 +36,10 @@ pub async fn index_document(
     let pool_inner1 = pool.get_ref().clone();
 
     let doc_chunks = parse_operator::chunk_document(document.doc_html.clone())?;
+
+    if doc_chunks.is_empty() {
+        return Err(ServiceError::EmptyDocumentError);
+    }
 
     let embedding = embedding_operator::get_average_embedding(doc_chunks).await?;
 

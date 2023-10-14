@@ -41,14 +41,12 @@ pub async fn main() -> std::io::Result<()> {
         .expect("Failed to migrate database.");
 
     let qdrant_client = get_qdrant_connection().await.unwrap();
-    let qdrant_collection =
-        std::env::var("QDRANT_COLLECTION").unwrap_or("doc_embeddings".to_owned());
-    let embedding_size = std::env::var("EMBEDDING_SIZE").unwrap_or("1024".to_owned());
-    let embedding_size = embedding_size.parse::<u64>().unwrap_or(1024);
+    let embedding_size = std::env::var("EMBEDDING_SIZE").unwrap_or("1536".to_owned());
+    let embedding_size = embedding_size.parse::<u64>().unwrap_or(1536);
 
     let _ = qdrant_client
         .create_collection(&CreateCollection {
-            collection_name: qdrant_collection,
+            collection_name: "doc_embeddings".to_owned(),
             vectors_config: Some(VectorsConfig {
                 config: Some(qdrant_client::qdrant::vectors_config::Config::Params(
                     VectorParams {
@@ -75,17 +73,14 @@ pub async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .service(
                 web::scope("/api")
-                    .route(
-                        "/healthcheck",
-                        web::get().to(handlers::healthcheck),
-                    )
+                    .route("/healthcheck", web::get().to(handlers::healthcheck))
                     .route(
                         "/check_key",
                         web::get().to(handlers::auth_handler::check_key),
                     )
                     .route(
                         "/index_document",
-                        web::post().to(handlers::embedding_handler::index_document),
+                        web::post().to(handlers::embedding_handler::embed_document),
                     )
                     .service(
                         web::resource("/document_group")

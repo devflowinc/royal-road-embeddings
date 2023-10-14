@@ -26,8 +26,8 @@ pub async fn create_doc_group_collection_qdrant_query(
 ) -> Result<(), ServiceError> {
     let qdrant_client = get_qdrant_connection().await.unwrap();
 
-    let embedding_size = std::env::var("EMBEDDING_SIZE").unwrap_or("1024".to_owned());
-    let embedding_size = embedding_size.parse::<u64>().unwrap_or(1024);
+    let embedding_size = std::env::var("EMBEDDING_SIZE").unwrap_or("1536".to_owned());
+    let embedding_size = embedding_size.parse::<u64>().unwrap_or(1536);
 
     let _ = qdrant_client
         .create_collection(&CreateCollection {
