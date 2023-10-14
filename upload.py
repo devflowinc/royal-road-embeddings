@@ -1,4 +1,5 @@
 import json
+import sys
 import requests
 import os
 from dotenv import load_dotenv
@@ -35,6 +36,7 @@ class IndexDocumentRequest:
             print(f"Already indexed {redis_key}")
             return
 
+        print(f"Indexing {redis_key}")
         redis_client.set(redis_key, "done")
 
         stringified_json_payload = self.get_payload()
@@ -45,18 +47,19 @@ class IndexDocumentRequest:
             req_error = req_result.text
             print(req_error)
 
-def main():
-    df = pd.read_pickle('cleaned_normalized_df_no_grouping.pkl')
-
-    i = 0
-
-    for index, row in df.iterrows():
+def process_chunk(chunk):
+    for index, row in chunk.iterrows():
         doc_html = row['content']
         story_id = int(row['FictionId'])
         index = int(row['Order'])
         index_doc_request = IndexDocumentRequest(doc_html, story_id, index)
         index_doc_request.send_post_request()
-        i += 1
+
+def main():
+    chunk_num = int(sys.argv[1])
+    chunk_df = pd.read_pickle(f'chunk_{chunk_num}.pkl')
+    process_chunk(chunk_df)
 
 if __name__ == '__main__':
     main()
+    exit()
