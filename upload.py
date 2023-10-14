@@ -13,7 +13,7 @@ redis_url = os.environ.get('REDIS_URL')
 redis_password = os.environ.get('REDIS_PASSWORD')
 url = api_url + '/index_document'
 
-redis_client = redis.Redis(host=redis_url, port=6379, password=redis_password, decode_responses=True)
+redis_client = redis.StrictRedis.from_url(redis_url, decode_responses=True, password=redis_password)
 
 class IndexDocumentRequest:
     def __init__(self, doc_html, story_id, index):
@@ -48,12 +48,15 @@ class IndexDocumentRequest:
 def main():
     df = pd.read_pickle('cleaned_normalized_df_no_grouping.pkl')
 
+    i = 0
+
     for index, row in df.iterrows():
         doc_html = row['content']
         story_id = int(row['FictionId'])
         index = int(row['Order'])
         index_doc_request = IndexDocumentRequest(doc_html, story_id, index)
         index_doc_request.send_post_request()
+        i += 1
 
 if __name__ == '__main__':
     main()
