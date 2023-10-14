@@ -41,12 +41,14 @@ services:
     build: ./
     ports:
       - "8090:8090"
-    environment:
-      - API_KEY=${API_KEY}
-      - EMBEDDING_SERVER_CALL=${EMBEDDING_SERVER_CALL}
-      - DATABASE_URL=${DATABASE_URL}
-      - QDRANT_URL=${QDRANT_URL}
-      - QDRANT_API_KEY=${QDRANT_API_KEY}
+    env_file:
+      .env
+    # environment:
+    #   - API_KEY=${API_KEY}
+    #   - EMBEDDING_SERVER_CALL=${EMBEDDING_SERVER_CALL}
+    #   - DATABASE_URL=${DATABASE_URL}
+    #   - QDRANT_URL=${QDRANT_URL}
+    #   - QDRANT_API_KEY=${QDRANT_API_KEY}
 
 networks:
   app-network:
