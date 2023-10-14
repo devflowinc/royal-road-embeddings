@@ -34,4 +34,8 @@ dist/
 build/
 *.egg-info/
 Chapters.csv
+chapters.csv
 test.json
+cleaned_normalized_chapters.csv
+cleaned_normalized_df_no_grouping.csv
+cleaned_normalized_df_no_grouping.pkl

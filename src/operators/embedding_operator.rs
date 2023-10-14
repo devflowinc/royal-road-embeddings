@@ -31,6 +31,7 @@ pub async fn get_openai_client() -> async_openai::Client<OpenAIConfig> {
 #[cfg(not(feature = "embedding_server"))]
 pub async fn get_average_embedding(chunks: Vec<String>) -> Result<Vec<f32>, ServiceError> {
     let client = get_openai_client().await;
+    let debug_chunks = chunks.clone();
 
     let embeddings = client
         .embeddings()
@@ -40,7 +41,11 @@ pub async fn get_average_embedding(chunks: Vec<String>) -> Result<Vec<f32>, Serv
             user: None,
         })
         .await
-        .map_err(ServiceError::CreateEmbeddingServerError)?
+        .map_err(|e| {
+            log::info!("Error calling OpenAI: {:?}", e);
+            log::info!("Chunks: {:?}", debug_chunks);
+            ServiceError::CreateEmbeddingServerError(e)
+        })?
         .data
         .into_iter()
         .map(|d| d.embedding)

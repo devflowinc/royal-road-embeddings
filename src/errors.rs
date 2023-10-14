@@ -38,6 +38,7 @@ pub enum ServiceError {
     ParseDocumentCallError(io::Error),
     ParseDocumentResponseError,
     ChunkDocumentError,
+    EmptyDocumentError,
 }
 
 impl ResponseError for ServiceError {
@@ -175,7 +176,7 @@ impl ResponseError for ServiceError {
             }
             ServiceError::CreateEmbeddingServerError(_) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
-                    message: "Error selecting DocEmbedding Qdrant IDs from Postgres.".to_string(),
+                    message: "Error creating embeddings using embedding model.".to_string(),
                     error_code: "0022".to_string(),
                 }),
             ServiceError::ParseDocumentCallError(_) => {
@@ -195,6 +196,12 @@ impl ResponseError for ServiceError {
                 HttpResponse::InternalServerError().json(ErrorResponse {
                     message: "Error Chunking Document".to_string(),
                     error_code: "0025".to_string(),
+                })
+            }
+            ServiceError::EmptyDocumentError => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Empty Document".to_string(),
+                    error_code: "0026".to_string(),
                 })
             }
         }
