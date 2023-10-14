@@ -191,6 +191,9 @@ pub async fn recommend_group_doc_embeddings_qdrant_query(
             with_vectors: None,
             lookup_from: None,
             read_consistency: None,
+            negative_vectors: vec![],
+            positive_vectors: vec![],
+            strategy: None,
         })
         .await
         .map_err(ServiceError::RecommendQdrantDocEmbeddingGroupError)?;
@@ -279,6 +282,7 @@ pub async fn similarity_top_filtered_point(
                 geo_bounding_box: None,
                 geo_radius: None,
                 values_count: None,
+                geo_polygon: None,
             }
             .into(),
             FieldCondition {
@@ -290,6 +294,7 @@ pub async fn similarity_top_filtered_point(
                 geo_bounding_box: None,
                 geo_radius: None,
                 values_count: None,
+                geo_polygon: None,
             }
             .into(),
         ],
