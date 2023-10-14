@@ -27,12 +27,17 @@ services:
     ports:
       - "5432:5432"
 
-  # embedding-server:
-  #   networks:
-  #     - app-network
-  #   build: ./python_src
-  #   ports:
-  #     - "5000:5000"
+  upload-redis:
+    image: redis
+    container_name: upload-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    command: redis-server --requirepass ${REDIS_PASSWORD}
 
   royal-road-server:
     networks:
@@ -55,3 +60,4 @@ networks:
 volumes:
   qdrant_data:
   pgdata:
+  redis-data:
