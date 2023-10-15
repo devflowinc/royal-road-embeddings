@@ -23,12 +23,12 @@ pub async fn create_embedding(message: String) -> Result<Vec<f32>, ServiceError>
 
 #[cfg(not(feature = "embedding_server"))]
 pub async fn get_openai_client() -> async_openai::Client<OpenAIConfig> {
+    let openai_api_keys = std::env::var("OPENAI_API_KEYS").expect("OPENAI_API_KEYS should be set");
+    let openai_api_keys: Vec<&str> = openai_api_keys.split(",").collect();
+
     let mut rng = rand::thread_rng();
-    let random_number: f64 = rng.gen();
-    let mut openai_api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY should be set");
-    if random_number > 0.5 {
-        openai_api_key = std::env::var("OPENAI_API_KEY_2").expect("OPENAI_API_KEY_2 should be set");
-    }
+    let random_index = rng.gen_range(0..openai_api_keys.len());
+    let openai_api_key = openai_api_keys[random_index];
 
     let config = OpenAIConfig::new().with_api_key(openai_api_key);
 
