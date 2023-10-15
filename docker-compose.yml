@@ -54,8 +54,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - QDRANT_URL=${QDRANT_URL}
       - QDRANT_API_KEY=${QDRANT_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_API_KEY_2=${OPENAI_API_KEY_2}
+      - OPENAI_API_KEYs=${OPENAI_API_KEY}
 
 networks:
   app-network:
