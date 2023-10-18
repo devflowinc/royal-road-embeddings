@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start processes
-for i in {0..24}; do
+for i in {1..6}; do
     python ./upload.py $i &
 done
 

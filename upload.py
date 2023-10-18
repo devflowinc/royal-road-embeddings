@@ -57,7 +57,7 @@ def process_chunk(chunk):
 
 def main():
     chunk_num = int(sys.argv[1])
-    chunk_df = pd.read_pickle(f'chunk_{chunk_num}.pkl')
+    chunk_df = pd.read_pickle(f'./deduped_chunks/original_rows_{chunk_num}.pkl')
     process_chunk(chunk_df)
 
 if __name__ == '__main__':
