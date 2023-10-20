@@ -71,5 +71,9 @@ def chunk_document(document: str):
     return chunks
 
 if __name__ == "__main__":
-    line = sys.argv[1]
-    print(json.dumps({ "chunks": chunk_document(line) }, ensure_ascii=False))
+    file_path = sys.argv[1]
+    document = ''
+    with open(file_path, 'r') as file:
+        document = file.read()
+
+    print(json.dumps({ "chunks": chunk_document(document) }, ensure_ascii=False))

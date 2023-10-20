@@ -39,6 +39,8 @@ pub enum ServiceError {
     ParseDocumentResponseError,
     ChunkDocumentError,
     EmptyDocumentError,
+    CreateTmpFileError(io::Error),
+    DeleteTmpFileError(io::Error),
 }
 
 impl ResponseError for ServiceError {
@@ -202,6 +204,18 @@ impl ResponseError for ServiceError {
                 HttpResponse::InternalServerError().json(ErrorResponse {
                     message: "Empty Document".to_string(),
                     error_code: "0026".to_string(),
+                })
+            }
+            ServiceError::CreateTmpFileError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error Creating Temporary File".to_string(),
+                    error_code: "0027".to_string(),
+                })
+            }
+            ServiceError::DeleteTmpFileError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error Deleting Temporary File".to_string(),
+                    error_code: "0028".to_string(),
                 })
             }
         }

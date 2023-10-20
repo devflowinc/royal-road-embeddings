@@ -1,5 +1,5 @@
-use std::process::Command;
 use serde::{Deserialize, Serialize};
+use std::process::Command;
 
 use crate::errors::ServiceError;
 
@@ -9,10 +9,25 @@ struct ParseCallReturn {
 }
 
 pub fn chunk_document(document: String) -> Result<Vec<String>, ServiceError> {
+    // make a uuid for the document
+    let temp_uuid = uuid::Uuid::new_v4();
+    let temp_file_name = format!("{}.txt", temp_uuid);
+    let temp_file_path = format!("./tmp/{}", temp_file_name);
+
+    std::fs::write(&temp_file_path, &document).map_err(|e| {
+        log::info!("Error: {:?}", e);
+        ServiceError::CreateTmpFileError(e)
+    })?;
+
     let output = Command::new("python")
-        .args(&["parser_1.py", &document])
+        .args(&["parser_1.py", &temp_file_path])
         .output()
-        .map_err(|_e| ServiceError::ChunkDocumentError)?;
+        .map_err(|e| {
+            println!("Error: {:?}", e);
+            ServiceError::ParseDocumentCallError(e)
+        })?;
+
+    std::fs::remove_file(&temp_file_path).map_err(|e| ServiceError::DeleteTmpFileError(e))?;
 
     let chunk_stringified_json =
         String::from_utf8(output.stdout.clone()).map_err(|_e| ServiceError::ChunkDocumentError)?;

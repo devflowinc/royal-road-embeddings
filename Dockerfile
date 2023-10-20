@@ -29,6 +29,8 @@ COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
 COPY parser_1.py /app/parser_1.py
+RUN rm -rf ./tmp
+RUN mkdir ./tmp
 RUN apt-get update && apt-get install -y libpq-dev pkg-config build-essential libssl-dev openssl
 
 EXPOSE 8090
