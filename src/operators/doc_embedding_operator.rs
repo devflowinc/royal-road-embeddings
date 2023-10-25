@@ -7,7 +7,9 @@ use crate::{
     handlers::doc_group_handler::IndexDocumentGroupRequest,
 };
 
-use super::doc_group_embedding_operator::upsert_doc_group_embedding_pg_query;
+use super::doc_group_embedding_operator::{
+    get_indexed_doc_group_qdrant_ids_pg_query, upsert_doc_group_embedding_pg_query,
+};
 use super::embedding_operator::group_average_embeddings;
 use super::qdrant_operator::get_doc_embeddings_qdrant_query;
 use super::qdrant_operator::insert_doc_group_embedding_qdrant_query;
@@ -114,10 +116,20 @@ pub async fn create_doc_group_embedding(
             doc_group_size,
         } => {
             let group_average = group_average_embeddings(embeddings, doc_group_size)?;
+
+            let indices = (0..group_average.len() as i32).collect::<Vec<i32>>();
+            let existing_doc_groups = get_indexed_doc_group_qdrant_ids_pg_query(
+                vec![story_id],
+                doc_group_size,
+                indices,
+                pool.clone(),
+            )
+            .await?;
+
             // upsert doc group metadata
             // upsert doc group embedding
             let qdrant_points_added =
-                insert_doc_group_embedding_qdrant_query(group_average, story_id, doc_group_size)
+                insert_doc_group_embedding_qdrant_query(existing_doc_groups, group_average, story_id, doc_group_size)
                     .await?;
 
             let doc_groups = qdrant_points_added.into_iter().flat_map(|point_struct| {

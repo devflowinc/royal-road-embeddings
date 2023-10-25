@@ -1,3 +1,8 @@
+use super::doc_group_embedding_operator::DocGroupQdrantPointIdContainer;
+use crate::{
+    data::models::{DocEmbedding, DocEmbeddingQdrantPayload, DocGroupEmbeddingQdrantPayload},
+    errors::ServiceError,
+};
 use qdrant_client::{
     prelude::{QdrantClient, QdrantClientConfig},
     qdrant::{
@@ -6,11 +11,6 @@ use qdrant_client::{
         HasIdCondition, Match, PointId, PointStruct, RecommendPoints, SearchPoints, VectorParams,
         VectorsConfig, WithPayloadSelector,
     },
-};
-
-use crate::{
-    data::models::{DocEmbedding, DocEmbeddingQdrantPayload, DocGroupEmbeddingQdrantPayload},
-    errors::ServiceError,
 };
 
 pub async fn get_qdrant_connection() -> Result<QdrantClient, ServiceError> {
@@ -109,6 +109,7 @@ pub async fn get_doc_embeddings_qdrant_query(
 
 /// Returns the PointStructs added
 pub async fn insert_doc_group_embedding_qdrant_query(
+    existing_doc_groups: Vec<DocGroupQdrantPointIdContainer>,
     vectors: Vec<Vec<f32>>,
     story_id: i64,
     doc_group_size: i32,
@@ -116,15 +117,26 @@ pub async fn insert_doc_group_embedding_qdrant_query(
     let points: Vec<PointStruct> = vectors
         .into_iter()
         .enumerate()
-        .map(|(idx, vector)| PointStruct {
-            id: Some(uuid::Uuid::new_v4().to_string().into()),
-            vectors: Some(vector.into()),
-            payload: DocGroupEmbeddingQdrantPayload {
-                story_id,
-                doc_group_size,
-                index: idx as i32,
+        .map(|(idx, vector)| {
+            let similar_existing_doc_group_point_id = existing_doc_groups
+                .iter()
+                .find(|doc_group| doc_group.index == idx as i32)
+                .map(|doc_group| doc_group.qdrant_point_id);
+
+            PointStruct {
+                id: Some(
+                    (similar_existing_doc_group_point_id.unwrap_or(uuid::Uuid::new_v4()))
+                        .to_string()
+                        .into(),
+                ),
+                vectors: Some(vector.into()),
+                payload: DocGroupEmbeddingQdrantPayload {
+                    story_id,
+                    doc_group_size,
+                    index: idx as i32,
+                }
+                .into(),
             }
-            .into(),
         })
         .collect();
 
