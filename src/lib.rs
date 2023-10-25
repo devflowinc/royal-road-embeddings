@@ -89,6 +89,12 @@ pub async fn main() -> std::io::Result<()> {
                                 web::put().to(handlers::doc_group_handler::index_document_group),
                             ),
                     )
+                    .service(web::resource("/recommend").route(
+                        web::post().to(handlers::doc_group_handler::recommend_document_group),
+                    ))
+                    .service(web::resource("/similarity").route(
+                        web::post().to(handlers::search_handler::similarity_to_single_vector),
+                    ))
                     .route(
                         "/search",
                         web::post().to(handlers::search_handler::semantic_search),

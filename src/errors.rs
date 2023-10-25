@@ -41,6 +41,7 @@ pub enum ServiceError {
     EmptyDocumentError,
     CreateTmpFileError(io::Error),
     DeleteTmpFileError(io::Error),
+    DeleteDocEmbeddingError(sqlx::Error),
 }
 
 impl ResponseError for ServiceError {
@@ -216,6 +217,12 @@ impl ResponseError for ServiceError {
                 HttpResponse::InternalServerError().json(ErrorResponse {
                     message: "Error Deleting Temporary File".to_string(),
                     error_code: "0028".to_string(),
+                })
+            }
+            ServiceError::DeleteDocEmbeddingError(_) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: "Error Deleting DocEmbedding".to_string(),
+                    error_code: "0029".to_string(),
                 })
             }
         }

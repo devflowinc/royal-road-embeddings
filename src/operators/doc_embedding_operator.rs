@@ -62,35 +62,32 @@ pub async fn upsert_doc_embedding_pg_query(
     Ok(qdrant_point_id.map(|qdrant_point_id_container| qdrant_point_id_container.qdrant_point_id))
 }
 
+pub async fn delete_doc_embedding_pg_query(
+    doc_embedding: DocEmbedding,
+    pool: Pool<Postgres>,
+) -> Result<(), ServiceError> {
+    // select qdrant_point_id from doc_embeddings where story_id = $1 and index = $2
+    sqlx::query_as!(
+        QdrantPointIdContainer,
+        r#"
+        DELETE FROM doc_embeddings
+        WHERE story_id = $1 AND index = $2;
+        "#,
+        doc_embedding.story_id,
+        doc_embedding.index,
+    )
+    .execute(&pool)
+    .await
+    .map_err(ServiceError::DeleteDocEmbeddingError)?;
+
+    Ok(())
+}
+
 pub async fn create_doc_group_embedding(
     groups: IndexDocumentGroupRequest,
     pool: Pool<Postgres>,
 ) -> Result<(), ServiceError> {
     let qdrant_points = match groups.clone() {
-        IndexDocumentGroupRequest::All { .. } => sqlx::query_as!(
-            QdrantPointIdContainer,
-            r#"
-                SELECT qdrant_point_id
-                FROM doc_embeddings
-                ORDER BY index ASC
-                "#,
-        )
-        .fetch_all(&pool)
-        .await
-        .map_err(ServiceError::GetDocEmbeddingsPgError)?,
-        IndexDocumentGroupRequest::Stories { story_ids, .. } => sqlx::query_as!(
-            QdrantPointIdContainer,
-            r#"
-                SELECT qdrant_point_id
-                FROM doc_embeddings
-                WHERE story_id = ANY($1)
-                ORDER BY index ASC
-                "#,
-            &story_ids[..]
-        )
-        .fetch_all(&pool)
-        .await
-        .map_err(ServiceError::GetDocEmbeddingsPgError)?,
         IndexDocumentGroupRequest::Story { story_id, .. } => sqlx::query_as!(
             QdrantPointIdContainer,
             r#"
@@ -103,6 +100,7 @@ pub async fn create_doc_group_embedding(
         .fetch_all(&pool)
         .await
         .map_err(ServiceError::GetDocEmbeddingsPgError)?,
+        _ => unimplemented!("Not yet implemented for multiple stories at once"),
     };
 
     // fetch all embeddings

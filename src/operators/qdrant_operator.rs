@@ -56,38 +56,55 @@ pub async fn create_doc_group_collection_qdrant_query(
 pub async fn get_doc_embeddings_qdrant_query(
     qdrant_points: Vec<uuid::Uuid>,
 ) -> Result<Vec<Vec<f32>>, ServiceError> {
+    let limit = Some(qdrant_points.len() as u32);
     let qdrant_client = get_qdrant_connection().await?;
-    let scroll_points = qdrant::ScrollPoints {
-        collection_name: "doc_embeddings".into(),
-        filter: Some(qdrant::Filter {
-            should: vec![HasIdCondition {
-                has_id: qdrant_points
-                    .into_iter()
-                    .map(|id| id.to_string().into())
-                    .collect(),
-            }
-            .into()],
+
+    let mut resulting_vectors: Vec<Vec<f32>> = vec![];
+    let mut offset = None;
+
+    loop {
+        let scroll_points = qdrant::ScrollPoints {
+            collection_name: "doc_embeddings".into(),
+            filter: Some(qdrant::Filter {
+                should: vec![HasIdCondition {
+                    has_id: qdrant_points
+                        .clone()
+                        .into_iter()
+                        .map(|id| id.to_string().into())
+                        .collect(),
+                }
+                .into()],
+                ..Default::default()
+            }),
+            offset,
+            limit,
+            with_vectors: Some(true.into()),
+            with_payload: Some(false.into()),
             ..Default::default()
-        }),
-        limit: None,
-        with_vectors: Some(true.into()),
-        with_payload: Some(false.into()),
-        ..Default::default()
-    };
+        };
 
-    let scroll_response = qdrant_client
-        .scroll(&scroll_points)
-        .await
-        .map_err(ServiceError::ScrollDocEmbeddingQdrantError)?;
+        let scroll_response = qdrant_client
+            .scroll(&scroll_points)
+            .await
+            .map_err(ServiceError::ScrollDocEmbeddingQdrantError)?;
 
-    Ok(scroll_response
-        .result
-        .into_iter()
-        .flat_map(|res| match res.vectors?.vectors_options? {
-            qdrant::vectors::VectorsOptions::Vector(vector) => Some(vector.data),
-            _ => None,
-        })
-        .collect::<Vec<Vec<f32>>>())
+        let cur_vectors = scroll_response
+            .result
+            .into_iter()
+            .flat_map(|res| match res.vectors?.vectors_options? {
+                qdrant::vectors::VectorsOptions::Vector(vector) => Some(vector.data),
+                _ => None,
+            })
+            .collect::<Vec<Vec<f32>>>();
+        resulting_vectors.extend(cur_vectors);
+
+        offset = scroll_response.next_page_offset;
+        if offset.is_none() {
+            break;
+        }
+    }
+
+    Ok(resulting_vectors)
 }
 
 /// Returns the PointStructs added

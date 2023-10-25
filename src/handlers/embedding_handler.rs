@@ -7,9 +7,10 @@ use crate::{
     data::models::DocEmbedding,
     errors::ServiceError,
     operators::{
-        doc_embedding_operator::upsert_doc_embedding_pg_query,
-        doc_group_embedding_operator::re_index_appropriate_doc_groups, embedding_operator,
-        parse_operator, qdrant_operator::delete_reinsert_doc_embedding_qdrant_query,
+        doc_embedding_operator::{delete_doc_embedding_pg_query, upsert_doc_embedding_pg_query},
+        doc_group_embedding_operator::re_index_appropriate_doc_groups,
+        embedding_operator, parse_operator,
+        qdrant_operator::delete_reinsert_doc_embedding_qdrant_query,
     },
 };
 
@@ -54,7 +55,7 @@ pub async fn embed_document(
     );
 
     let qdrant_point_id_to_delete =
-        upsert_doc_embedding_pg_query(doc_embedding_to_upsert.clone(), pool_inner).await?;
+        upsert_doc_embedding_pg_query(doc_embedding_to_upsert.clone(), pool_inner.clone()).await?;
 
     if qdrant_point_id_to_delete.is_some() {
         Arbiter::new().spawn(async move {
@@ -62,12 +63,20 @@ pub async fn embed_document(
         });
     }
 
-    delete_reinsert_doc_embedding_qdrant_query(
+    let qdrant_result = delete_reinsert_doc_embedding_qdrant_query(
         qdrant_point_id_to_delete,
         doc_embedding_to_upsert.clone(),
         embedding.clone(),
     )
-    .await?;
+    .await;
+
+    if let Err(e) = qdrant_result {
+        if qdrant_point_id_to_delete.is_some() {
+            delete_doc_embedding_pg_query(doc_embedding_to_upsert.clone(), pool_inner.clone())
+                .await?;
+        }
+        return Err(e);
+    }
 
     Ok(HttpResponse::Ok().json(IndexDocumentResponse { embedding }))
 }
