@@ -1,11 +1,9 @@
-use std::future::{ready, Ready};
-
+use crate::errors::ServiceError;
 use actix_web::{
     HttpRequest, HttpResponse,
     {dev::Payload, FromRequest},
 };
-
-use crate::errors::ServiceError;
+use std::future::{ready, Ready};
 
 pub struct AuthRequired {}
 

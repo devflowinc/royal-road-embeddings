@@ -1,18 +1,16 @@
-use qdrant_client::qdrant;
-use sqlx::{Pool, Postgres};
-
-use crate::data::models::DocGroupEmbedding;
-use crate::{
-    data::models::DocEmbedding, errors::ServiceError,
-    handlers::doc_group_handler::IndexDocumentGroupRequest,
-};
-
 use super::doc_group_embedding_operator::{
     get_indexed_doc_group_qdrant_ids_pg_query, upsert_doc_group_embedding_pg_query,
 };
 use super::embedding_operator::group_average_embeddings;
 use super::qdrant_operator::get_doc_embeddings_qdrant_query;
 use super::qdrant_operator::insert_doc_group_embedding_qdrant_query;
+use crate::data::models::DocGroupEmbedding;
+use crate::{
+    data::models::DocEmbedding, errors::ServiceError,
+    handlers::doc_group_handler::IndexDocumentGroupRequest,
+};
+use qdrant_client::qdrant;
+use sqlx::{Pool, Postgres};
 
 pub struct QdrantPointIdContainer {
     pub qdrant_point_id: uuid::Uuid,
@@ -128,9 +126,13 @@ pub async fn create_doc_group_embedding(
 
             // upsert doc group metadata
             // upsert doc group embedding
-            let qdrant_points_added =
-                insert_doc_group_embedding_qdrant_query(existing_doc_groups, group_average, story_id, doc_group_size)
-                    .await?;
+            let qdrant_points_added = insert_doc_group_embedding_qdrant_query(
+                existing_doc_groups,
+                group_average,
+                story_id,
+                doc_group_size,
+            )
+            .await?;
 
             let doc_groups = qdrant_points_added.into_iter().flat_map(|point_struct| {
                 let qdrant_point_id: uuid::Uuid = match point_struct.id?.point_id_options? {

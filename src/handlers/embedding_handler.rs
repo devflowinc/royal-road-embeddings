@@ -1,8 +1,4 @@
-use actix_rt::Arbiter;
-use actix_web::{web, HttpResponse};
-use serde::{Deserialize, Serialize};
-use sqlx::{Pool, Postgres};
-
+use super::auth_handler::AuthRequired;
 use crate::{
     data::models::DocEmbedding,
     errors::ServiceError,
@@ -13,8 +9,10 @@ use crate::{
         qdrant_operator::delete_reinsert_doc_embedding_qdrant_query,
     },
 };
-
-use super::auth_handler::AuthRequired;
+use actix_rt::Arbiter;
+use actix_web::{web, HttpResponse};
+use serde::{Deserialize, Serialize};
+use sqlx::{Pool, Postgres};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct IndexDocumentRequest {

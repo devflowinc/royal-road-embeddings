@@ -1,11 +1,9 @@
-use serde::{Deserialize, Serialize};
-
-use ndarray::Array2;
-
 use crate::errors::ServiceError;
 use async_openai::config::OpenAIConfig;
 use async_openai::types::CreateEmbeddingRequest;
+use ndarray::Array2;
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CustomServerData {

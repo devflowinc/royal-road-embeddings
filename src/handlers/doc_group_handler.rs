@@ -1,8 +1,4 @@
-use actix_web::{web, HttpResponse};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-use sqlx::{Pool, Postgres};
-
+use super::auth_handler::AuthRequired;
 use crate::{
     errors::ServiceError,
     operators::{
@@ -13,8 +9,10 @@ use crate::{
         },
     },
 };
-
-use super::auth_handler::AuthRequired;
+use actix_web::{web, HttpResponse};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use sqlx::{Pool, Postgres};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GroupDocumentRequest {

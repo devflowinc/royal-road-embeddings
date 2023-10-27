@@ -1,9 +1,7 @@
+use crate::operators::qdrant_operator::get_qdrant_connection;
 use actix_web::{middleware, web, App, HttpServer};
 use qdrant_client::qdrant::{CreateCollection, Distance, VectorParams, VectorsConfig};
 use sqlx::postgres::PgPoolOptions;
-
-use crate::operators::qdrant_operator::get_qdrant_connection;
-
 pub mod data;
 pub mod errors;
 pub mod handlers;

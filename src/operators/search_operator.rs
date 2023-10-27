@@ -1,9 +1,7 @@
+use super::qdrant_operator::QdrantPoints;
+use crate::{data::models::DocEmbedding, data::models::DocGroupEmbedding, errors::ServiceError};
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
-
-use crate::{data::models::DocEmbedding, data::models::DocGroupEmbedding, errors::ServiceError};
-
-use super::qdrant_operator::QdrantPoints;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum DocEmbeddingType {

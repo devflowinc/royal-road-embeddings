@@ -1,16 +1,14 @@
-use qdrant_client::qdrant::PointStruct;
-use sqlx::{Pool, Postgres};
-use std::collections::HashMap;
-
-use crate::{
-    data::models::{DocGroupEmbedding, DocGroupEmbeddingQdrantPayload},
-    errors::ServiceError,
-};
-
 use super::{
     embedding_operator::average_embeddings,
     qdrant_operator::{get_doc_embeddings_qdrant_query, get_qdrant_connection},
 };
+use crate::{
+    data::models::{DocGroupEmbedding, DocGroupEmbeddingQdrantPayload},
+    errors::ServiceError,
+};
+use qdrant_client::qdrant::PointStruct;
+use sqlx::{Pool, Postgres};
+use std::collections::HashMap;
 
 pub async fn get_single_vectors_to_re_average(
     story_id: i64,

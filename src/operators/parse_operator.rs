@@ -1,7 +1,6 @@
+use crate::errors::ServiceError;
 use serde::{Deserialize, Serialize};
 use std::process::Command;
-
-use crate::errors::ServiceError;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct ParseCallReturn {
