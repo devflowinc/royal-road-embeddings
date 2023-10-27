@@ -2,6 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 import psycopg2
+from tqdm import tqdm
 
 load_dotenv()
 api_key = os.environ.get('API_KEY')
@@ -42,7 +43,7 @@ if __name__ == "__main__":
 
     while True:
         results = cursor.fetchmany(batch_size)
-        for result in results:
+        for result in tqdm(results, desc="Processing results"):
             story_id = result[0]
             print(story_id)
             index_document_group(story_id, 50)
