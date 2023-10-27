@@ -230,12 +230,15 @@ pub async fn recommend_group_doc_embeddings_qdrant_query(
     let mut story_ids = vec![];
 
     for point in recommend_result.result {
-        let story_id: i64 = point
+        let story_id_as_str = point
             .payload
             .get("story_id")
             .expect("story_id not found")
-            .as_integer()
-            .expect("story_id is not an integer");
+            .as_str()
+            .expect("story_id is not a string");
+
+        let story_id: i64 = story_id_as_str.parse().expect("story_id is not a number");
+
         story_ids.push(story_id);
     }
 
@@ -305,7 +308,7 @@ pub async fn similarity_top_filtered_point(
             FieldCondition {
                 key: "story_id".to_owned(),
                 r#match: Some(Match {
-                    match_value: Some(MatchValue::Integer(story_id)),
+                    match_value: Some(MatchValue::Text(story_id.to_string())),
                 }),
                 range: None,
                 geo_bounding_box: None,

@@ -1,8 +1,12 @@
+#!/usr/bin/env python3
+
 import requests
 import os
 from dotenv import load_dotenv
 import psycopg2
 from tqdm import tqdm
+import sys
+import pandas as pd
 
 load_dotenv()
 api_key = os.environ.get('API_KEY')
@@ -29,11 +33,15 @@ def index_document_group(story_id, group_size):
     return response.status_code
 
 if __name__ == "__main__":
-    create_document_group(50)
-
-    query = "SELECT DISTINCT story_id FROM doc_embeddings"
+    if len(sys.argv) != 2:
+        print("Usage: python foo.py <offset>")
+        sys.exit(1)
 
     batch_size = 10000
+
+    offset = int(sys.argv[1]) * batch_size
+
+    query = f"SELECT DISTINCT story_id FROM doc_embeddings OFFSET {offset}"
 
     conn = psycopg2.connect(db_url)
 
@@ -41,15 +49,11 @@ if __name__ == "__main__":
 
     cursor.execute(query)
 
-    while True:
-        results = cursor.fetchmany(batch_size)
-        for result in tqdm(results, desc="Processing results"):
-            story_id = result[0]
-            print(story_id)
-            index_document_group(story_id, 50)
-        if not results:
-            break
-        break
+    results = cursor.fetchmany(batch_size)
+    
+    for result in tqdm(results, desc="Processing results"):
+        story_id = result
+        index_document_group(story_id, 50)
 
     cursor.close()
     conn.close()
