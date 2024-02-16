@@ -4,7 +4,7 @@ services:
   qdrant-database:
     networks:
       - app-network
-    image: qdrant/qdrant:v1.3.2
+    image: qdrant/qdrant:v1.7.4
     environment:
       - QDRANT__SERVICE__API_KEY=qdrant_pass
     ports:

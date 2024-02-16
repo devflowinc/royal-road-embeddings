@@ -145,6 +145,7 @@ pub async fn insert_doc_group_embedding_qdrant_query(
     qdrant_client
         .upsert_points(
             format!("doc_group_{}", doc_group_size),
+            None,
             points.clone(),
             None,
         )
@@ -173,7 +174,7 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
         };
 
         client
-            .delete_points("doc_embeddings", &filter.into(), None)
+            .delete_points("doc_embeddings", None, &filter.into(), None)
             .await
             .map_err(ServiceError::DeleteDocEmbeddingQdrantError)?;
     }
@@ -185,7 +186,7 @@ pub async fn delete_reinsert_doc_embedding_qdrant_query(
     };
 
     client
-        .upsert_points_blocking("doc_embeddings", vec![point], None)
+        .upsert_points_blocking("doc_embeddings", None, vec![point], None)
         .await
         .map_err(ServiceError::UpsertDocEmbeddingQdrantError)?;
 
@@ -223,6 +224,8 @@ pub async fn recommend_group_doc_embeddings_qdrant_query(
             negative_vectors: vec![],
             positive_vectors: vec![],
             strategy: None,
+            timeout: None,
+            shard_key_selector: None,
         })
         .await
         .map_err(ServiceError::RecommendQdrantDocEmbeddingGroupError)?;

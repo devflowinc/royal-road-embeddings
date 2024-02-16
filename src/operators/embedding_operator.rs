@@ -43,6 +43,8 @@ pub async fn get_average_embedding(chunks: Vec<String>) -> Result<Vec<f32>, Serv
             input: chunks.into(),
             model: "text-embedding-ada-002".to_string(),
             user: None,
+            encoding_format: None,
+            dimensions: None,
         })
         .await
         .map_err(|e| {
