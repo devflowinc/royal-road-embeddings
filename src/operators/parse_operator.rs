@@ -67,7 +67,7 @@ pub fn chunk_document(document: String) -> Vec<String> {
             .join("");
         groups.push(group);
         sentences.drain(0..group_size);
-        remainder -= group_size as f32;
+        remainder -= remainder_per_group as f32;
     }
 
     while !sentences.is_empty() {
