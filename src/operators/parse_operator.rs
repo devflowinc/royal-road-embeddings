@@ -4,17 +4,18 @@ use scraper::Html;
 use std::cmp;
 
 pub fn remove_large_chunks(cur_chunks: Vec<String>) -> Vec<String> {
+    let max_chunk_len = 24000;
     let mut chunks = cur_chunks;
     let mut new_chunks: Vec<String> = vec![];
     for chunk in chunks.iter_mut() {
-        if chunk.len() < 1500 {
+        if chunk.len() < max_chunk_len {
             new_chunks.push(chunk.to_string());
             continue;
         }
 
         let char_count = chunk.chars().count() as f32;
 
-        let num_new_chunks = (char_count / 1500.0).ceil() as usize;
+        let num_new_chunks = (char_count / max_chunk_len as f32).ceil() as usize;
         let chunk_size = (char_count / num_new_chunks as f32).ceil();
         let mut total_length = char_count;
 
@@ -45,20 +46,20 @@ pub fn chunk_document(document: String) -> Vec<String> {
         .collect();
 
     let mut groups: Vec<String> = vec![];
-    let min_group_size = 10;
+    let target_group_size = 200;
 
-    if sentences.len() < min_group_size {
+    if sentences.len() < target_group_size {
         groups.push(sentences.join(""));
         return remove_large_chunks(groups);
     }
 
-    let mut remainder = (sentences.len() % min_group_size) as f32;
-    let group_count = ((sentences.len() / min_group_size) as f32).floor();
+    let mut remainder = (sentences.len() % target_group_size) as f32;
+    let group_count = ((sentences.len() / target_group_size) as f32).floor();
     let remainder_per_group = (remainder / group_count).ceil();
 
     while remainder > 0.0 {
         let group_size =
-            min_group_size + cmp::min(remainder as usize, remainder_per_group as usize) as usize;
+            target_group_size + cmp::min(remainder as usize, remainder_per_group as usize) as usize;
         let group = sentences
             .iter()
             .take(group_size)
@@ -73,12 +74,12 @@ pub fn chunk_document(document: String) -> Vec<String> {
     while !sentences.is_empty() {
         let group = sentences
             .iter()
-            .take(min_group_size)
+            .take(target_group_size)
             .copied()
             .collect::<Vec<&str>>()
             .join("");
         groups.push(group);
-        sentences.drain(0..min_group_size);
+        sentences.drain(0..target_group_size);
     }
 
     remove_large_chunks(groups)
