@@ -4,7 +4,7 @@ use scraper::Html;
 use std::cmp;
 
 pub fn remove_large_chunks(cur_chunks: Vec<String>) -> Vec<String> {
-    let max_chunk_len = 24000;
+    let max_chunk_len = 10000;
     let mut chunks = cur_chunks;
     let mut new_chunks: Vec<String> = vec![];
     for chunk in chunks.iter_mut() {
@@ -46,7 +46,7 @@ pub fn chunk_document(document: String) -> Vec<String> {
         .collect();
 
     let mut groups: Vec<String> = vec![];
-    let target_group_size = 200;
+    let target_group_size = 30;
 
     if sentences.len() < target_group_size {
         groups.push(sentences.join(""));
