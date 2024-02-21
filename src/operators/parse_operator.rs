@@ -1,50 +1,66 @@
-use crate::errors::ServiceError;
+use std::cmp;
+
+use regex::Regex;
+use regex_split::RegexSplit;
+use scraper::Html;
 use serde::{Deserialize, Serialize};
-use std::process::Command;
 
 #[derive(Debug, Deserialize, Serialize)]
-struct ParseCallReturn {
+pub struct ParseCallReturn {
     chunks: Vec<String>,
 }
 
-pub fn chunk_document(document: String) -> Result<Vec<String>, ServiceError> {
-    // make a uuid for the document
-    let temp_uuid = uuid::Uuid::new_v4();
-    let temp_file_name = format!("{}.txt", temp_uuid);
-    let temp_file_path = format!("./tmp/{}", temp_file_name);
+pub fn chunk_document(document: String) -> Vec<String> {
+    let document_without_newlines = document.replace("\n", " ");
+    let dom = Html::parse_fragment(&document_without_newlines);
 
-    std::fs::write(&temp_file_path, &document).map_err(|e| {
-        log::info!("Error: {:?}", e);
-        ServiceError::CreateTmpFileError(e)
-    })?;
+    // get the raw text from the HTML
+    let clean_text = dom.root_element().text().collect::<String>();
 
-    let output = Command::new("python")
-        .args(&["parser_1.py", &temp_file_path])
-        .output()
-        .map_err(|e| {
-            println!("Error: {:?}", e);
-            ServiceError::ParseDocumentCallError(e)
-        })?;
+    // split the text into sentences
+    let split_sentence_regex = Regex::new(r"[.!?]+").expect("Invalid regex");
+    let mut sentences: Vec<&str> = split_sentence_regex
+        .split_inclusive_left(&clean_text)
+        .collect();
 
-    std::fs::remove_file(&temp_file_path).map_err(|e| ServiceError::DeleteTmpFileError(e))?;
+    let mut groups: Vec<String> = vec![];
+    let min_group_size = 10;
 
-    let chunk_stringified_json =
-        String::from_utf8(output.stdout.clone()).map_err(|_e| ServiceError::ChunkDocumentError)?;
-
-    let chunk_json: ParseCallReturn = serde_json::from_str(&chunk_stringified_json)
-        .map_err(|_e| ServiceError::ParseDocumentResponseError)?;
-
-    Ok(chunk_json.chunks)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    pub fn test_chunk_document() {
-        let result = chunk_document("I am a man. That has a Very very big plan.".to_string());
-        println!("Result {result:?}");
-        assert_eq!(result.expect("Should exist").len(), 1);
+    if sentences.len() < min_group_size {
+        groups.push(sentences.join(""));
+        groups.retain(|x| x != "");
+        return groups;
     }
+
+    let mut remainder = (sentences.len() % min_group_size) as f32;
+    let group_count = ((sentences.len() / min_group_size) as f32).floor();
+    let remainder_per_group = (remainder / group_count).ceil();
+
+    while remainder > 0.0 {
+        let group_size =
+            min_group_size + cmp::min(remainder as usize, remainder_per_group as usize) as usize;
+        let group = sentences
+            .iter()
+            .take(group_size)
+            .map(|x| *x)
+            .collect::<Vec<&str>>()
+            .join(" ");
+        groups.push(group);
+        sentences.drain(0..group_size);
+        remainder -= remainder_per_group;
+    }
+
+    while sentences.len() > 0 {
+        let group = sentences
+            .iter()
+            .take(min_group_size)
+            .map(|x| *x)
+            .collect::<Vec<&str>>()
+            .join("");
+        groups.push(group);
+        sentences.drain(0..min_group_size);
+    }
+
+    groups.retain(|x| x != "");
+    groups
 }

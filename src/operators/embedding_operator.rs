@@ -1,7 +1,10 @@
 use crate::errors::ServiceError;
+#[cfg(not(feature = "embedding_server"))]
 use async_openai::config::OpenAIConfig;
+#[cfg(not(feature = "embedding_server"))]
 use async_openai::types::CreateEmbeddingRequest;
 use ndarray::Array2;
+#[cfg(not(feature = "embedding_server"))]
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -80,7 +83,6 @@ pub async fn get_average_embedding(document_chunks: Vec<String>) -> Result<Vec<f
     Ok(resp.embeddings)
 }
 
-#[cfg(not(feature = "embedding_server"))]
 pub fn average_embeddings(embeddings: Vec<Vec<f32>>) -> Result<Vec<f32>, ServiceError> {
     let shape = (embeddings.len(), embeddings[0].len());
     let flat: Vec<f32> = embeddings.iter().flatten().cloned().collect();

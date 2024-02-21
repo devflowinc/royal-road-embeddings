@@ -19,16 +19,13 @@ ENV SQLX_OFFLINE true
 RUN cargo build --release
 
 # Use Ubuntu 22.04 as the base image
-FROM python:3.12.0-slim-bookworm as runtime
+FROM debian:bookworm-slim as runtime
 
 WORKDIR /app
 
 COPY ./migrations/ /app/migrations
 COPY --from=builder /app/target/release/royal-road-embeddings /app/royal-road-embeddings
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
 
-COPY parser_1.py /app/parser_1.py
 RUN rm -rf ./tmp
 RUN mkdir ./tmp
 RUN apt-get update && apt-get install -y libpq-dev pkg-config build-essential libssl-dev openssl

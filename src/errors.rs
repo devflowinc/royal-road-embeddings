@@ -57,9 +57,9 @@ impl ResponseError for ServiceError {
                 message: "Invalid API key provided.".to_string(),
                 error_code: "0001".to_string(),
             }),
-            ServiceError::EmbeddingServerCallError(_) => {
+            ServiceError::EmbeddingServerCallError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error calling embedding server.".to_string(),
+                    message: format!("Error calling embedding server: {:?}", e),
                     error_code: "0002".to_string(),
                 })
             }
@@ -75,87 +75,87 @@ impl ResponseError for ServiceError {
                     error_code: "0004".to_string(),
                 })
             }
-            ServiceError::QdrantConnectionError(_) => {
+            ServiceError::QdrantConnectionError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error connecting to Qdrant.".to_string(),
+                    message: format!("Error connecting to Qdrant: {:?}", e),
                     error_code: "0005".to_string(),
                 })
             }
-            ServiceError::UpsertDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
+            ServiceError::UpsertDocEmbeddingQdrantError(e) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
-                    message: "Error upserting DocEmbedding to Qdrant.".to_string(),
+                    message: format!("Error upserting DocEmbedding to Qdrant: {:?}", e),
                     error_code: "0006".to_string(),
                 }),
-            ServiceError::DeleteDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
+            ServiceError::DeleteDocEmbeddingQdrantError(e) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
-                    message: "Error deleting DocEmbedding from Qdrant.".to_string(),
+                    message: format!("Error deleting DocEmbedding from Qdrant: {:?}", e),
                     error_code: "0007".to_string(),
                 }),
-            ServiceError::UpsertDocEmbeddingPgError(_) => {
+            ServiceError::UpsertDocEmbeddingPgError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error upserting DocEmbedding to Postgres.".to_string(),
+                    message: format!("Error upserting DocEmbedding to Postgres: {:?}", e),
                     error_code: "0008".to_string(),
                 })
             }
-            ServiceError::SelectDocGroupQdrantIdsPgError(_) => HttpResponse::InternalServerError()
+            ServiceError::SelectDocGroupQdrantIdsPgError(e) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
-                    message: "Error selecting DocGroup Qdrant IDs from Postgres.".to_string(),
+                    message: format!("Error selecting DocGroup Qdrant IDs from Postgres: {:?}", e),
                     error_code: "0009".to_string(),
                 }),
-            ServiceError::RecommendQdrantDocEmbeddingGroupError(_) => {
+            ServiceError::RecommendQdrantDocEmbeddingGroupError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error recommending DocEmbedding group from Qdrant.".to_string(),
+                    message: format!("Error recommending DocEmbedding group from Qdrant: {:?}", e),
                     error_code: "0010".to_string(),
                 })
             }
-            ServiceError::GetDocEmbeddingsPgError(_) => {
+            ServiceError::GetDocEmbeddingsPgError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error getting DocEmbeddings from Postgres.".to_string(),
+                    message: format!("Error getting DocEmbeddings from Postgres: {:?}", e),
                     error_code: "0011".to_string(),
                 })
             }
-            ServiceError::ScrollDocEmbeddingQdrantError(_) => HttpResponse::InternalServerError()
+            ServiceError::ScrollDocEmbeddingQdrantError(e) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
-                    message: "Error getting DocEmbeddings from Qdrant.".to_string(),
+                    message: format!("Error scrolling DocEmbeddings from Qdrant: {:?}", e),
                     error_code: "0012".to_string(),
                 }),
-            ServiceError::VectorToArrayError(_) => {
+            ServiceError::VectorToArrayError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error converting vector to array.".to_string(),
+                    message: format!("Error converting vector to array: {:?}", e),
                     error_code: "0013".to_string(),
                 })
             }
-            ServiceError::UpsertDocGroupEmbeddingPgError(_) => HttpResponse::InternalServerError()
+            ServiceError::UpsertDocGroupEmbeddingPgError(e) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
-                    message: "Error upserting DocGroupEmbedding to Postgres.".to_string(),
+                    message: format!("Error upserting DocGroupEmbedding to Postgres: {:?}", e),
                     error_code: "0014".to_string(),
                 }),
-            ServiceError::QdrantSearchError(_) => {
+            ServiceError::QdrantSearchError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error searching Qdrant.".to_string(),
+                    message: format!("Error searching Qdrant: {:?}", e),
                     error_code: "0015".to_string(),
                 })
             }
-            ServiceError::PgSearchError(_) => {
+            ServiceError::PgSearchError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error searching Postgres.".to_string(),
+                    message: format!("Error searching Postgres: {:?}", e),
                     error_code: "0016".to_string(),
                 })
             }
-            ServiceError::UpsertDocGroupEmbeddingQdrantError(_) => {
+            ServiceError::UpsertDocGroupEmbeddingQdrantError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error upserting DocGroupEmbedding to Qdrant.".to_string(),
+                    message: format!("Error upserting DocGroupEmbedding to Qdrant: {:?}", e),
                     error_code: "0017".to_string(),
                 })
             }
-            ServiceError::InsertDocGroupEmbeddingPgError(_) => HttpResponse::InternalServerError()
+            ServiceError::InsertDocGroupEmbeddingPgError(e) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
-                    message: "Error inserting DocGroupEmbedding to Postgres.".to_string(),
+                    message: format!("Error inserting DocGroupEmbedding to Postgres: {:?}", e),
                     error_code: "0018".to_string(),
                 }),
-            ServiceError::QdrantSimilarityTopFilteredPointError(_) => {
+            ServiceError::QdrantSimilarityTopFilteredPointError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error getting similarity to single vector from Qdrant.".to_string(),
+                    message: format!("Error getting top filtered points from Qdrant: {:?}", e),
                     error_code: "0018".to_string(),
                 })
             }
@@ -165,27 +165,32 @@ impl ResponseError for ServiceError {
                     error_code: "0019".to_string(),
                 })
             }
-            ServiceError::SelectUniqueDocGroupSizesPgError(_) => {
+            ServiceError::SelectUniqueDocGroupSizesPgError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error selecting unique DocGroup sizes from Postgres.".to_string(),
+                    message: format!(
+                        "Error selecting unique DocGroup sizes from Postgres: {:?}",
+                        e
+                    ),
                     error_code: "0020".to_string(),
                 })
             }
-            ServiceError::SelectDocEmbeddingsQdrantIdsPgError(_) => {
+            ServiceError::SelectDocEmbeddingsQdrantIdsPgError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error selecting DocEmbedding Qdrant IDs from Postgres.".to_string(),
+                    message: format!(
+                        "Error selecting DocEmbeddings Qdrant IDs from Postgres: {:?}",
+                        e
+                    ),
                     error_code: "0021".to_string(),
                 })
             }
-            ServiceError::CreateEmbeddingServerError(_) => HttpResponse::InternalServerError()
+            ServiceError::CreateEmbeddingServerError(e) => HttpResponse::InternalServerError()
                 .json(ErrorResponse {
-                    message: "Error creating embeddings using embedding model.".to_string(),
+                    message: format!("Error creating embedding server: {:?}", e),
                     error_code: "0022".to_string(),
                 }),
-            ServiceError::ParseDocumentCallError(_) => {
+            ServiceError::ParseDocumentCallError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error Calling Parse Document Command (likely file not found)"
-                        .to_string(),
+                    message: format!("Error calling Parse Document Command: {:?}", e),
                     error_code: "0023".to_string(),
                 })
             }
@@ -207,21 +212,21 @@ impl ResponseError for ServiceError {
                     error_code: "0026".to_string(),
                 })
             }
-            ServiceError::CreateTmpFileError(_) => {
+            ServiceError::CreateTmpFileError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error Creating Temporary File".to_string(),
+                    message: format!("Error Creating Temporary File: {:?}", e),
                     error_code: "0027".to_string(),
                 })
             }
-            ServiceError::DeleteTmpFileError(_) => {
+            ServiceError::DeleteTmpFileError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error Deleting Temporary File".to_string(),
+                    message: format!("Error Deleting Temporary File: {:?}", e),
                     error_code: "0028".to_string(),
                 })
             }
-            ServiceError::DeleteDocEmbeddingError(_) => {
+            ServiceError::DeleteDocEmbeddingError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error Deleting DocEmbedding".to_string(),
+                    message: format!("Error Deleting DocEmbedding: {:?}", e),
                     error_code: "0029".to_string(),
                 })
             }

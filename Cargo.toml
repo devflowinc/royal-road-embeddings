@@ -30,11 +30,15 @@ actix-rt = "2.9.0"
 async-openai = "0.18.3"
 itertools = "0.12.1"
 rand = "0.8.5"
+scraper = "0.18.1"
+html5ever = "0.26.0"
+regex-split = "0.1.0"
+regex = "1.10.3"
 
 [dev-dependencies]
 actix-rt = "2.9.0"
 either = { version = "1.9.0", features = ["serde"] }
 
 [features]
-default = ["embedding-server"]
-embedding-server = []
+default = ["embedding_server"]
+embedding_server = []

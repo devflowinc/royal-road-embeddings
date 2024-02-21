@@ -36,7 +36,7 @@ pub async fn embed_document(
 ) -> Result<HttpResponse, ServiceError> {
     let pool_inner = pool.get_ref().clone();
 
-    let doc_chunks = parse_operator::chunk_document(document.doc_html.clone())?;
+    let doc_chunks = parse_operator::chunk_document(document.doc_html.clone());
 
     if doc_chunks.is_empty() {
         return Err(ServiceError::EmptyDocumentError);
