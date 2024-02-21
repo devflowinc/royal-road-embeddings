@@ -36,5 +36,5 @@ actix-rt = "2.9.0"
 either = { version = "1.9.0", features = ["serde"] }
 
 [features]
-default = []
+default = ["embedding-server"]
 embedding-server = []

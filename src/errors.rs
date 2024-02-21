@@ -63,9 +63,9 @@ impl ResponseError for ServiceError {
                     error_code: "0002".to_string(),
                 })
             }
-            ServiceError::EmbeddingServerParseError(_) => {
+            ServiceError::EmbeddingServerParseError(e) => {
                 HttpResponse::InternalServerError().json(ErrorResponse {
-                    message: "Error parsing embedding server response.".to_string(),
+                    message: format!("Error parsing embedding server response: {:?}", e),
                     error_code: "0003".to_string(),
                 })
             }

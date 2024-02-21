@@ -33,5 +33,7 @@ RUN rm -rf ./tmp
 RUN mkdir ./tmp
 RUN apt-get update && apt-get install -y libpq-dev pkg-config build-essential libssl-dev openssl
 
+RUN ulimit -n 65535
+
 EXPOSE 8090
 ENTRYPOINT ["/app/royal-road-embeddings"]
