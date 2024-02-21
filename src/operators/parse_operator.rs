@@ -3,18 +3,25 @@ use regex_split::RegexSplit;
 use scraper::Html;
 use std::cmp;
 
-pub fn remove_large_chunks(cur_chunks: Vec<String>) -> Vec<String> {
+pub fn count_tokens(text: &str) -> usize {
+    let split_word_regex = Regex::new(r"(\s+)|[^\w\s]").expect("Invalid regex");
+    split_word_regex.split(text).count()
+}
+
+pub fn split_large_groups_on_chars(cur_chunks: Vec<String>) -> Vec<String> {
+    let max_chars_in_chunk = 30000;
+
     let mut chunks = cur_chunks;
     let mut new_chunks: Vec<String> = vec![];
     for chunk in chunks.iter_mut() {
-        if chunk.len() < 1500 {
+        if chunk.len() < max_chars_in_chunk {
             new_chunks.push(chunk.to_string());
             continue;
         }
 
         let char_count = chunk.chars().count() as f32;
 
-        let num_new_chunks = (char_count / 1500.0).ceil() as usize;
+        let num_new_chunks = (char_count / max_chars_in_chunk as f32).ceil() as usize;
         let chunk_size = (char_count / num_new_chunks as f32).ceil();
         let mut total_length = char_count;
 
@@ -31,6 +38,33 @@ pub fn remove_large_chunks(cur_chunks: Vec<String>) -> Vec<String> {
     new_chunks
 }
 
+pub fn group_sentences(sentences: Vec<&str>) -> Vec<String> {
+    let max_token_size = 5000;
+    let mut sentences = sentences;
+    let mut groups: Vec<String> = vec![];
+
+    while sentences.len() > 0 {
+        let mut sentences_to_remove = 0;
+        let mut group = String::new();
+
+        for sentence in sentences.iter() {
+            sentences_to_remove += 1;
+            let token_count = count_tokens(sentence);
+
+            if count_tokens(group.as_str()) + token_count > max_token_size {
+                break;
+            }
+
+            group.push_str(sentence);
+        }
+
+        let group = sentences.drain(0..sentences_to_remove).collect::<String>();
+        groups.push(group);
+    }
+
+    groups
+}
+
 pub fn chunk_document(document: String) -> Vec<String> {
     let document_without_newlines = document.replace('\n', " ");
     let dom = Html::parse_fragment(&document_without_newlines);
@@ -40,46 +74,11 @@ pub fn chunk_document(document: String) -> Vec<String> {
 
     // split the text into sentences
     let split_sentence_regex = Regex::new(r"[.!?\n]+").expect("Invalid regex");
-    let mut sentences: Vec<&str> = split_sentence_regex
+    let sentences: Vec<&str> = split_sentence_regex
         .split_inclusive_left(&clean_text)
         .collect();
 
-    let mut groups: Vec<String> = vec![];
-    let min_group_size = 10;
+    let sentence_groups = group_sentences(sentences);
 
-    if sentences.len() < min_group_size {
-        groups.push(sentences.join(""));
-        return remove_large_chunks(groups);
-    }
-
-    let mut remainder = (sentences.len() % min_group_size) as f32;
-    let group_count = ((sentences.len() / min_group_size) as f32).floor();
-    let remainder_per_group = (remainder / group_count).ceil();
-
-    while remainder > 0.0 {
-        let group_size =
-            min_group_size + cmp::min(remainder as usize, remainder_per_group as usize) as usize;
-        let group = sentences
-            .iter()
-            .take(group_size)
-            .copied()
-            .collect::<Vec<&str>>()
-            .join("");
-        groups.push(group);
-        sentences.drain(0..group_size);
-        remainder -= remainder_per_group as f32;
-    }
-
-    while !sentences.is_empty() {
-        let group = sentences
-            .iter()
-            .take(min_group_size)
-            .copied()
-            .collect::<Vec<&str>>()
-            .join("");
-        groups.push(group);
-        sentences.drain(0..min_group_size);
-    }
-
-    remove_large_chunks(groups)
+    split_large_groups_on_chars(sentence_groups)
 }
