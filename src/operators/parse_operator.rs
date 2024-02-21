@@ -1,17 +1,36 @@
-use std::cmp;
-
 use regex::Regex;
 use regex_split::RegexSplit;
 use scraper::Html;
-use serde::{Deserialize, Serialize};
+use std::cmp;
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ParseCallReturn {
-    chunks: Vec<String>,
+pub fn remove_large_chunks(cur_chunks: Vec<String>) -> Vec<String> {
+    let mut chunks = cur_chunks;
+    let mut new_chunks: Vec<String> = vec![];
+    for chunk in chunks.iter_mut() {
+        if chunk.len() < 1500 {
+            new_chunks.push(chunk.to_string());
+            continue;
+        }
+
+        let num_new_chunks = (chunk.chars().count() as f32 / 1500.0).ceil() as usize;
+        let chunk_size = (chunk.chars().count() as f32 / num_new_chunks as f32).ceil();
+        let mut total_length = chunk.chars().count() as f32;
+
+        while total_length > 0.0 {
+            let amt_to_take = cmp::min(chunk_size as usize, total_length as usize);
+            let new_chunk = chunk.chars().take(amt_to_take).collect::<String>();
+            new_chunks.push(new_chunk);
+            chunk.drain(0..amt_to_take as usize);
+            total_length -= amt_to_take as f32;
+        }
+    }
+
+    new_chunks.retain(|x| !x.is_empty());
+    new_chunks
 }
 
 pub fn chunk_document(document: String) -> Vec<String> {
-    let document_without_newlines = document.replace("\n", " ");
+    let document_without_newlines = document.replace('\n', " ");
     let dom = Html::parse_fragment(&document_without_newlines);
 
     // get the raw text from the HTML
@@ -28,8 +47,7 @@ pub fn chunk_document(document: String) -> Vec<String> {
 
     if sentences.len() < min_group_size {
         groups.push(sentences.join(""));
-        groups.retain(|x| x != "");
-        return groups;
+        return remove_large_chunks(groups);
     }
 
     let mut remainder = (sentences.len() % min_group_size) as f32;
@@ -41,26 +59,23 @@ pub fn chunk_document(document: String) -> Vec<String> {
             min_group_size + cmp::min(remainder as usize, remainder_per_group as usize) as usize;
         let group = sentences
             .iter()
-            .take(group_size)
-            .map(|x| *x)
+            .take(group_size).copied()
             .collect::<Vec<&str>>()
             .join(" ");
         groups.push(group);
         sentences.drain(0..group_size);
-        remainder -= remainder_per_group;
+        remainder -= group_size as f32;
     }
 
-    while sentences.len() > 0 {
+    while !sentences.is_empty() {
         let group = sentences
             .iter()
-            .take(min_group_size)
-            .map(|x| *x)
+            .take(min_group_size).copied()
             .collect::<Vec<&str>>()
             .join("");
         groups.push(group);
         sentences.drain(0..min_group_size);
     }
 
-    groups.retain(|x| x != "");
-    groups
+    remove_large_chunks(groups)
 }

@@ -70,7 +70,7 @@ pub async fn embed_document(
                     doc_group_size: group_size,
                 };
 
-                let _ = create_doc_group_embedding(doc_group_to_index, pool_inner1.clone());
+                let _ = create_doc_group_embedding(doc_group_to_index, pool_inner1.clone()).await;
             }
         });
     }
