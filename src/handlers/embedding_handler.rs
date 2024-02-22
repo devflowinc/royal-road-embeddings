@@ -34,9 +34,14 @@ pub async fn embed_document(
     pool: web::Data<Pool<Postgres>>,
     _: AuthRequired,
 ) -> Result<HttpResponse, ServiceError> {
+    let doc_html = match std::str::from_utf8(document.doc_html.as_bytes()) {
+        Ok(s) => s.to_string(),
+        Err(e) => return Err(ServiceError::InvalidUtf8Error(e)),
+    };
+
     let pool_inner = pool.get_ref().clone();
 
-    let doc_chunks = parse_operator::chunk_document(document.doc_html.clone());
+    let doc_chunks = parse_operator::chunk_document(doc_html.clone());
 
     if doc_chunks.is_empty() {
         return Err(ServiceError::EmptyDocumentError);
@@ -46,7 +51,7 @@ pub async fn embed_document(
 
     let doc_embedding_to_upsert = DocEmbedding::from_details(
         None,
-        document.doc_html.clone(),
+        doc_html.clone(),
         document.story_id,
         document.index,
         None,

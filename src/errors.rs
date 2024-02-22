@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, ResponseError};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
-use std::io;
+use std::{io, str::Utf8Error};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
@@ -42,6 +42,7 @@ pub enum ServiceError {
     CreateTmpFileError(io::Error),
     DeleteTmpFileError(io::Error),
     DeleteDocEmbeddingError(sqlx::Error),
+    InvalidUtf8Error(Utf8Error),
 }
 
 impl ResponseError for ServiceError {
@@ -228,6 +229,12 @@ impl ResponseError for ServiceError {
                 HttpResponse::InternalServerError().json(ErrorResponse {
                     message: format!("Error Deleting DocEmbedding: {:?}", e),
                     error_code: "0029".to_string(),
+                })
+            }
+            ServiceError::InvalidUtf8Error(e) => {
+                HttpResponse::InternalServerError().json(ErrorResponse {
+                    message: format!("Invalid UTF-8: {:?}", e),
+                    error_code: "0030".to_string(),
                 })
             }
         }
