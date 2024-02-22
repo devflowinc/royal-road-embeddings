@@ -8,23 +8,28 @@ pub fn remove_large_chunks(cur_chunks: Vec<String>) -> Vec<String> {
     let mut chunks = cur_chunks;
     let mut new_chunks: Vec<String> = vec![];
     for chunk in chunks.iter_mut() {
-        if chunk.len() < max_chunk_len {
+        let char_count = chunk.chars().count() as f32;
+
+        if char_count < (max_chunk_len as f32) {
             new_chunks.push(chunk.to_string());
             continue;
         }
-
-        let char_count = chunk.chars().count() as f32;
 
         let num_new_chunks = (char_count / max_chunk_len as f32).ceil() as usize;
         let chunk_size = (char_count / num_new_chunks as f32).ceil();
         let mut total_length = char_count;
 
         while total_length > 0.0 {
-            let amt_to_take = cmp::min(chunk_size as usize, total_length as usize);
+            let amt_to_remove = cmp::min(chunk_size as usize, total_length as usize);
+            let mut amt_to_take = amt_to_remove;
+            while !chunk.is_char_boundary(amt_to_take) {
+                amt_to_take -= 1;
+            }
+
             let new_chunk = chunk.chars().take(amt_to_take).collect::<String>();
             new_chunks.push(new_chunk);
             chunk.drain(0..amt_to_take as usize);
-            total_length -= amt_to_take as f32;
+            total_length -= amt_to_remove as f32;
         }
     }
 
